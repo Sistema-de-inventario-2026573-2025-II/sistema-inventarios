@@ -1,0 +1,14 @@
+# sistema-inventarios/backend/app/api/deps.py
+from collections.abc import Generator
+from sqlalchemy.orm import Session
+from app.db.session import SessionLocal
+
+def get_db() -> Generator[Session, None, None]:
+    """
+    Dependencia de FastAPI para obtener una sesion de base de datos.
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

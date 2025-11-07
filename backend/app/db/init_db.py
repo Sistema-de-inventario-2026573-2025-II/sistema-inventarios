@@ -12,10 +12,8 @@ from sqlalchemy.orm import Session
 from app.db.session import engine, SessionLocal
 from app.db.base import Base
 
-# --- Importar todos los modelos ---
-# Esto es crucial para que Base.metadata los reconozca
-from app.models.producto import Producto
-# (Cuando agreguemos mas modelos, los importaremos aqui)
+import app.models
+
 
 def init_db(db: Session) -> None:
     """
@@ -24,6 +22,8 @@ def init_db(db: Session) -> None:
     # Base.metadata.create_all() es idempotente,
     # no recreara tablas que ya existen.
     Base.metadata.create_all(bind=engine)
+    print(engine.url)
+    
 
 def main() -> None:
     """
