@@ -2,7 +2,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 from app.db.base import Base
-from datetime import datetime
+from datetime import datetime, timezone
 
 class Movimiento(Base):
     __tablename__ = "movimientos"
@@ -28,4 +28,4 @@ class Movimiento(Base):
         """
         super().__init__(*args, **kwargs)
         if self.fecha_movimiento is None:
-            self.fecha_movimiento = datetime.utcnow()
+            self.fecha_movimiento = datetime.now(timezone.utc)

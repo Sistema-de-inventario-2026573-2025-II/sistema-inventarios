@@ -7,11 +7,13 @@ def test_producto_schema_import():
     Prueba que los esquemas de Pydantic para Producto se pueden importar.
     """
     # Esta importacion fallara
-    from app.schemas.producto import Producto, ProductoCreate, ProductoBase
+    from app.schemas.producto import Producto, ProductoCreate, ProductoBase, ProductoUpdate
     
     assert Producto is not None
     assert ProductoCreate is not None
     assert ProductoBase is not None
+    assert ProductoUpdate is not None
+
 
 def test_producto_create_schema_validation():
     """
@@ -36,6 +38,27 @@ def test_producto_create_schema_validation():
             nombre="Producto Invalido",
             sku="SKU456",
             precio=-1.00 # El precio no debe ser negativo
+        )
+
+def test_producto_update_schema_validation():
+    """
+    Prueba que el esquema ProductoUpdate valida correctamente los datos.
+    """
+    from app.schemas.producto import ProductoUpdate
+    
+    # Datos validos (todos opcionales)
+    data = {
+        "nombre": "Producto Actualizado",
+        "precio": 20.00
+    }
+    schema = ProductoUpdate(**data)
+    assert schema.nombre == "Producto Actualizado"
+    assert schema.precio == 20.00
+    
+    # Datos invalidos (precio negativo)
+    with pytest.raises(ValidationError):
+        ProductoUpdate(
+            precio=-5.00 # El precio no debe ser negativo
         )
 
 def test_lote_schema_import():

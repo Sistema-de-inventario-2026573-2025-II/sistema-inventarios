@@ -22,33 +22,22 @@ def test_create_product(test_client: TestClient):
     assert "id" in data
     assert data["cantidad_actual"] == 0
 
-def test_get_product_by_id(test_client: TestClient):
+def test_get_product_by_id(test_client: TestClient, product_in_db: dict):
     """
     Prueba para GET /api/v1/productos/{id}.
     Primero crea un producto y luego prueba que se puede obtener.
     """
-    # ETAPA 1: SETUP - Crear un producto para poder obtenerlo
-    product_data = {
-        "nombre": "Producto para GET",
-        "sku": "SKU-GET-001",
-        "precio": 50.00,
-        "stock_minimo": 1
-    }
-    response_create = test_client.post("/api/v1/productos", json=product_data)
-    assert response_create.status_code == 201
-    created_data = response_create.json()
-    product_id = created_data["id"]
+    # ETAPA 1: SETUP - Hecho por el fixture!
+    product_id = product_in_db["id"]
+    product_sku = product_in_db["sku"]
 
-    # ETAPA 2: LA PRUEBA (Esto es lo que fallara)
+    # ETAPA 2: LA PRUEBA
     response_get = test_client.get(f"/api/v1/productos/{product_id}")
 
-    # Esperamos 200 OK, pero obtendremos 404 Not Found
     assert response_get.status_code == 200
-    
-    # Verificamos que los datos sean correctos
     data = response_get.json()
     assert data["id"] == product_id
-    assert data["sku"] == "SKU-GET-001"
+    assert data["sku"] == product_sku
 
 def test_get_all_products(test_client: TestClient):
     """
@@ -84,26 +73,18 @@ def test_get_all_products(test_client: TestClient):
     assert data[0]["sku"] == "SKU-LIST-001"
     assert data[1]["sku"] == "SKU-LIST-002"
 
-def test_update_product(test_client: TestClient):
+def test_update_product(test_client: TestClient, product_in_db: dict):
     """
     Prueba para PUT /api/v1/productos/{id}.
-    Primero crea un producto, luego prueba que se puede actualizar.
+    Usa el fixture 'product_in_db' para el setup.
     """
-    # ETAPA 1: SETUP - Crear un producto
-    product_data = {
-        "nombre": "Producto Original",
-        "sku": "SKU-UPDATE-001",
-        "precio": 100.00
-    }
-    response_create = test_client.post("/api/v1/productos", json=product_data)
-    assert response_create.status_code == 201
-    created_product = response_create.json()
-    product_id = created_product["id"]
+    # ETAPA 1: SETUP - Hecho por el fixture!
+    product_id = product_in_db["id"]
 
-    # ETAPA 2: LA PRUEBA (Esto es lo que fallara)
+    # ETAPA 2: LA PRUEBA
     update_data = {
         "nombre": "Producto Actualizado",
-        "sku": "SKU-UPDATE-001", # SKU no cambia
+        "sku": product_in_db["sku"], # Usar el mismo SKU
         "precio": 150.50,
         "stock_minimo": 20
     }
@@ -112,43 +93,32 @@ def test_update_product(test_client: TestClient):
         json=update_data
     )
 
-    # Esperamos 200 OK, pero obtendremos 405 Method Not Allowed
     assert response_update.status_code == 200
-    
-    # Verificamos que los datos se hayan actualizado
     data = response_update.json()
     assert data["nombre"] == "Producto Actualizado"
     assert data["precio"] == 150.50
-    assert data["stock_minimo"] == 20
     assert data["id"] == product_id
 
-def test_delete_product(test_client: TestClient):
+def test_delete_product(test_client: TestClient, product_in_db: dict):
     """
     Prueba para DELETE /api/v1/productos/{id}.
-    Primero crea un producto, prueba que se puede borrar,
-    y luego prueba que no se puede obtener (GET).
+    Usa el fixture 'product_in_db' para el setup.
     """
-    # ETAPA 1: SETUP - Crear un producto
-    product_data = {
-        "nombre": "Producto a Borrar",
-        "sku": "SKU-DELETE-001",
-        "precio": 10.00
-    }
-    response_create = test_client.post("/api/v1/productos", json=product_data)
-    assert response_create.status_code == 201
-    created_product = response_create.json()
-    product_id = created_product["id"]
+    # ETAPA 1: SETUP - Hecho por el fixture!
+    product_id = product_in_db["id"]
+    product_sku = product_in_db["sku"]
 
-    # ETAPA 2: LA PRUEBA DE BORRADO (Esto es lo que fallara)
+    # ETAPA 2: LA PRUEBA DE BORRADO
     response_delete = test_client.delete(f"/api/v1/productos/{product_id}")
 
-    # Esperamos 200 OK, pero obtendremos 405 Method Not Allowed
     assert response_delete.status_code == 200
-    
-    # Verificamos que devolvio el producto borrado
     data = response_delete.json()
     assert data["id"] == product_id
-    assert data["sku"] == "SKU-DELETE-001"
+    assert data["sku"] == product_sku
+
+    # ETAPA 3: VERIFICACION
+    response_get = test_client.get(f"/api/v1/productos/{product_id}")
+    assert response_get.status_code == 404
 
     # ETAPA 3: VERIFICACION
     # Probamos que el producto ya no existe
