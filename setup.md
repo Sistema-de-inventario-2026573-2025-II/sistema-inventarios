@@ -46,9 +46,9 @@ Necesitarás python (versión 3.10 o superior) y uv (nuestro gestor de paquetes)
 ### **Paso 3: Configuración del Entorno Virtual**
 
 1. **Crea el Entorno Virtual:**  
-   * Usa uv para crear un entorno virtual local llamado .venv.  
+   * Usa uv para configurar un entorno virtual local llamado .venv.  
      ``` bash
-     uv venv --python 3.10.19
+     uv sync
      ```
 
 2. **Activa el Entorno:**  
