@@ -1,5 +1,6 @@
 # sistema-inventarios/backend/app/schemas/producto.py
 from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional
 
 class ProductoBase(BaseModel):
     """Esquema base para un producto."""
@@ -11,6 +12,16 @@ class ProductoBase(BaseModel):
 class ProductoCreate(ProductoBase):
     """Esquema para la creacion de un producto."""
     precio: float = Field(..., gt=0) # gt=0 means "greater than 0"
+
+class ProductoUpdate(BaseModel):
+    """
+    Esquema para actualizar un producto.
+    Todos los campos son opcionales.
+    """
+    nombre: Optional[str] = Field(None, min_length=1)
+    sku: Optional[str] = Field(None, min_length=1)
+    precio: Optional[float] = Field(None, gt=0)
+    stock_minimo: Optional[int] = Field(None, gt=0)
 
 class Producto(ProductoBase):
     """
