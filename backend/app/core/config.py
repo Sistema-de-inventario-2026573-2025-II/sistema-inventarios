@@ -19,7 +19,9 @@ class Settings(BaseSettings):
         env_file=str(ENV_PATH),
         env_file_encoding='utf-8'
     )
+    
     DATABASE_URL: str = "sqlite:///./default.db"
+    LOG_LEVEL: str = "INFO"
 
 @lru_cache()
 def get_settings() -> Settings:
