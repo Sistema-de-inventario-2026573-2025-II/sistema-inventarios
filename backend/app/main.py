@@ -1,6 +1,12 @@
 # sistema-inventarios/backend/app/main.py
+import logging
 from fastapi import FastAPI
-from app.api.api import api_router  # <-- Importar el router
+from app.api.api import api_router
+from app.core.logging_setup import setup_logging
+
+setup_logging()
+logger = logging.getLogger(__name__)
+logger.info("Aplicacion iniciada y logger configurado.")
 
 app = FastAPI()
 
