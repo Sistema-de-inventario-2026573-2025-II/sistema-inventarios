@@ -124,3 +124,28 @@ def test_delete_product(test_client: TestClient, product_in_db: dict):
     # Probamos que el producto ya no existe
     response_get = test_client.get(f"/api/v1/productos/{product_id}")
     assert response_get.status_code == 404
+
+def test_create_product_duplicate_sku(
+    test_client: TestClient, 
+    product_in_db: dict
+):
+    """
+    Prueba que la API previene la creacion de un producto
+    con un SKU duplicado y devuelve 409 Conflict.
+    """
+    
+    product_data = {
+        "nombre": "Producto Duplicado",
+        "sku": "SKU-FIXTURE-001",
+        "precio": 1.00,
+        "stock_minimo": 1
+    }
+    
+    response = test_client.post("/api/v1/productos", json=product_data)
+    
+    assert response.status_code == 409
+    
+    data = response.json()
+    assert "detail" in data
+    assert "SKU" in data["detail"]
+    assert "ya existe" in data["detail"]
