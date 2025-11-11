@@ -1,4 +1,5 @@
 # sistema-inventarios/backend/app/api/endpoints/inventory.py
+import logging
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 # Importamos los schemas de Lote de Modulo 1
@@ -11,6 +12,8 @@ from app.api.deps import get_db
 from app.core.exceptions import InsufficientStockError
 
 router = APIRouter()
+
+logger = logging.getLogger(__name__)
 
 @router.get(
     "/lotes/{lote_id}",
@@ -107,4 +110,14 @@ def smart_dispatch_inventory(
         raise HTTPException(
             status_code=400,
             detail=e.message
+        )
+    except ValueError as e:
+        # Atrapar el error interno que lanzamos desde el CRUD
+        logger.error(
+            f"Error interno en smart_dispatch_fefo: {e}", 
+            exc_info=True  # Esto anadira el traceback al log
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error interno del servidor: {e}"
         )
