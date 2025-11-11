@@ -12,6 +12,7 @@ dependencies = [
     "pydantic",
     "pydantic-settings",
     "colorlog",
+    "dash>=3.2.0",
 ]
 
 [project.optional-dependencies]
