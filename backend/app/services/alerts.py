@@ -14,6 +14,8 @@ def check_stock_minimo(db: Session) -> List[Producto]:
     Servicio que devuelve una lista de todos los productos
     que estan por debajo de su stock minimo.
     """
+    # Usamos un query de SQLAlchemy.
+    # Compara la columna 'cantidad_actual' con la columna 'stock_minimo'
     logger.info("Ejecutando servicio de alerta 'check_stock_minimo'...")
     stmt = select(Producto).where(Producto.cantidad_actual < Producto.stock_minimo)
     
