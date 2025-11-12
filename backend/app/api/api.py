@@ -2,6 +2,7 @@
 from fastapi import APIRouter
 from app.api.endpoints import products
 from app.api.endpoints import inventory
+from app.api.endpoints import alerts
 
 api_router = APIRouter()
 
@@ -14,4 +15,9 @@ api_router.include_router(
     inventory.router, 
     prefix="/v1/inventario",
     tags=["Inventario"] 
+)
+api_router.include_router(
+    alerts.router,
+    prefix="/v1/alertas",
+    tags=["Alertas"]
 )

@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 # Importamos los esquemas de Pydantic
 import app.schemas.producto as product_schema
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 # Import the models for our new fixtures
 from app.models.producto import Producto
@@ -119,3 +119,60 @@ def lote_model_in_db(db_session: Session, product_model_in_db: Producto) -> Lote
     db_session.commit()
     db_session.refresh(lote)
     return lote
+
+@pytest.fixture(scope="function")
+def low_stock_product_setup(test_client: TestClient) -> dict:
+    """
+    Fixture que crea un producto que esta por debajo
+    de su stock minimo.
+    """
+    product_data = {
+        "nombre": "Producto de Prueba de Alerta",
+        "sku": "SKU-ALERT-001",
+        "precio": 1.00,
+        "stock_minimo": 5
+    }
+    # Por defecto, cantidad_actual es 0.
+    # 0 < 5, asi que esta en alerta.
+    response_create = test_client.post("/api/v1/productos", json=product_data)
+    assert response_create.status_code == 201
+    
+    return response_create.json()
+
+@pytest.fixture(scope="function")
+def expiring_lotes_setup(test_client: TestClient, product_in_db: dict) -> dict:
+    """
+    Fixture que crea un setup complejo para pruebas de alertas:
+    - 1 Producto (del fixture 'product_in_db')
+    - 1 Lote que expira en 15 dias ("lote_a")
+    - 1 Lote que expira en 60 dias ("lote_b")
+    Devuelve un dict con los IDs de los objetos creados.
+    """
+    product_id = product_in_db["id"]
+    
+    # Lote A: Expira en 15 dias
+    lote_expirando_data = {
+        "producto_id": product_id,
+        "cantidad_recibida": 10,
+        "fecha_vencimiento": (date.today() + timedelta(days=15)).isoformat()
+    }
+    resp_a = test_client.post("/api/v1/inventario/entradas", json=lote_expirando_data)
+    assert resp_a.status_code == 201
+    lote_a_id = resp_a.json()["id"]
+
+    # Lote B: Expira en 60 dias
+    lote_ok_data = {
+        "producto_id": product_id,
+        "cantidad_recibida": 10,
+        "fecha_vencimiento": (date.today() + timedelta(days=60)).isoformat()
+    }
+    resp_b = test_client.post("/api/v1/inventario/entradas", json=lote_ok_data)
+    assert resp_b.status_code == 201
+    lote_b_id = resp_b.json()["id"]
+    
+    # Devolver los IDs para que el test los use
+    yield {
+        "product_id": product_id,
+        "lote_a_id": lote_a_id,
+        "lote_b_id": lote_b_id
+    }
