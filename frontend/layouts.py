@@ -1,4 +1,4 @@
-from dash import html, dash_table
+from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 import logging
 
@@ -84,3 +84,64 @@ content_layout = html.Div(
         "padding": "2rem 1rem",
     }
 )
+
+# Definir columnas para las tablas de alertas
+columnas_stock_bajo = [
+    {"name": "SKU", "id": "sku"},
+    {"name": "Nombre", "id": "nombre"},
+    {"name": "Stock Actual", "id": "cantidad_actual"},
+    {"name": "Stock Mínimo", "id": "stock_minimo"},
+]
+
+columnas_por_vencer = [
+    {"name": "Lote ID", "id": "id"},
+    {"name": "Producto SKU", "id": "producto_sku"}, # Asumimos que el API lo dara
+    {"name": "Stock Lote", "id": "cantidad_actual"},
+    {"name": "Fecha Venc.", "id": "fecha_vencimiento"},
+]
+
+alerts_layout = dbc.Container([
+    # Trigger para el callback (se dispara al cargar la pagina)
+    dcc.Location(id="alerts-url-trigger", refresh=True),
+    
+    dbc.Row(html.H2("Dashboard de Alertas")),
+    html.Hr(),
+    
+    # Fila para Alerta de Stock Bajo
+    dbc.Row([
+        dbc.Col([
+            html.H4("Alerta: Stock Mínimo"),
+            dbc.Alert(
+                "Cargando...", 
+                color="info", 
+                id="low-stock-status" # ID para el callback
+            ),
+            dash_table.DataTable(
+                id="low-stock-table", # ID para el callback
+                columns=columnas_stock_bajo,
+                data=[],
+                page_size=5,
+                style_table={'overflowX': 'auto'},
+            )
+        ])
+    ], className="mb-4"),
+    
+    # Fila para Alerta de Lotes por Vencer
+    dbc.Row([
+        dbc.Col([
+            html.H4("Alerta: Lotes Próximos a Vencer (30 días)"),
+            dbc.Alert(
+                "Cargando...", 
+                color="info", 
+                id="expiring-lotes-status" # ID para el callback
+            ),
+            dash_table.DataTable(
+                id="expiring-lotes-table", # ID para el callback
+                columns=columnas_por_vencer,
+                data=[],
+                page_size=5,
+                style_table={'overflowX': 'auto'},
+            )
+        ])
+    ])
+], fluid=True, className="p-3")

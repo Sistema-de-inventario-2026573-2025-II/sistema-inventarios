@@ -1,6 +1,6 @@
 # sistema-inventarios/frontend/tests/test_callbacks.py
 import pytest
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 from dash import html
 
 @pytest.fixture
@@ -84,3 +84,54 @@ def test_navigation_callback():
     # 3. Probar una pagina desconocida
     page_content = display_page(pathname="/pagina-mala")
     assert isinstance(page_content, html.P)
+
+def test_update_alerts_dashboard(mocker):
+    """
+    Prueba el callback del dashboard de alertas (Task 8.x).
+    Debe llamar a dos endpoints y devolver dos listas de datos.
+    """
+    # ETAPA 1: SETUP
+    # Mockear dos respuestas de API diferentes
+    mock_low_stock_data = [{"sku": "SKU-LOW-001", "cantidad_actual": 1}]
+    mock_expiring_data = [{"id": 99, "cantidad_actual": 5}]
+
+    # Crear los objetos de respuesta
+    mock_low_stock_response = Mock(status_code=200)
+    mock_low_stock_response.json.return_value = mock_low_stock_data
+    
+    mock_expiring_response = Mock(status_code=200)
+    mock_expiring_response.json.return_value = mock_expiring_data
+
+    # Usamos mocker.patch con 'side_effect' para que devuelva
+    # un valor diferente cada vez que se llama.
+    mock_get = mocker.patch(
+        "callbacks.requests.get", 
+        side_effect=[mock_low_stock_response, mock_expiring_response]
+    )
+
+    # ETAPA 2: LA PRUEBA
+    from callbacks import update_alerts_dashboard
+
+    # El callback se dispara con la URL de la pagina
+    (
+        low_stock_data, 
+        expiring_data, 
+        low_stock_msg, 
+        expiring_msg
+    ) = update_alerts_dashboard(pathname="/")
+
+    # ETAPA 3: VERIFICACION
+    # 3.1: Verificar que se llamo a los endpoints correctos
+    expected_calls = [
+        call("http://127.0.0.1:8000/api/v1/alertas/stock-minimo"),
+        call("http://127.0.0.1:8000/api/v1/alertas/por-vencer?days=30")
+    ]
+    mock_get.assert_has_calls(expected_calls)
+    
+    # 3.2: Verificar los datos devueltos
+    assert low_stock_data[0]["sku"] == "SKU-LOW-001"
+    assert expiring_data[0]["id"] == 99
+    
+    # 3.3: Verificar los mensajes de estado
+    assert "1 productos" in low_stock_msg
+    assert "1 lotes" in expiring_msg
