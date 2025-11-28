@@ -2,6 +2,7 @@
 import pytest
 from unittest.mock import Mock, call
 from dash import html
+from layouts import products_layout, alerts_layout
 
 @pytest.fixture
 def mock_api_get(mocker):
@@ -68,9 +69,10 @@ def test_navigation_callback():
     Prueba el callback de navegacion principal (display_page).
     """
     # ETAPA 1: SETUP
-    from layouts import products_layout
+    # (No es necesario importar 'layouts' aquí, ya está arriba)
 
     # ETAPA 2: LA PRUEBA
+    # Importar desde la ubicacion correcta
     from callbacks import display_page
 
     # 1. Probar la pagina de productos
@@ -79,11 +81,12 @@ def test_navigation_callback():
 
     # 2. Probar la pagina principal (Alertas)
     page_content = display_page(pathname="/")
-    assert isinstance(page_content, html.P)
+    assert page_content == alerts_layout  # <-- ESTA ES LA CORRECCIÓN
 
-    # 3. Probar una pagina desconocida
+    # 3. Probar una pagina desconocida (debe ir a la pagina de Alertas)
     page_content = display_page(pathname="/pagina-mala")
-    assert isinstance(page_content, html.P)
+    assert page_content == alerts_layout # <-- ESTA ES LA CORRECCIÓN 
+
 
 def test_update_alerts_dashboard(mocker):
     """
