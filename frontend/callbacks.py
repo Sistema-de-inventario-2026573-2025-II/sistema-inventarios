@@ -16,7 +16,7 @@ logger.info(f"Conectando a la API en: {API_BASE_URL}")
     Input("refresh-products-button", "n_clicks"),
     Input("products-interval", "n_intervals")
 )
-def update_products_table(n_clicks: int, n_intervals: int) -> (list, str):
+def update_products_table(n_clicks: int, n_intervals: int) -> tuple[list, str]:
     """
     Callback para actualizar la tabla de productos al hacer clic
     en el boton de refrescar O por el intervalo automatico.
@@ -60,7 +60,7 @@ def update_products_table(n_clicks: int, n_intervals: int) -> (list, str):
     Output("expiring-lotes-status", "children"),
     Input("url", "pathname"), # Se dispara cuando la URL cambia
 )
-def update_alerts_dashboard(pathname: str) -> (list, list, str, str):
+def update_alerts_dashboard(pathname: str) -> tuple[list, list, str, str]:
     """
     Callback para poblar el dashboard de alertas.
     Se dispara al cargar la pagina principal.
