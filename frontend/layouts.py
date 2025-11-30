@@ -146,3 +146,68 @@ alerts_layout = dbc.Container([
         ])
     ])
 ], fluid=True, className="p-3")
+
+inventory_layout = dbc.Container([
+    html.H2("Gestión de Inventario"),
+    html.Hr(),
+
+    # Sección para Registrar Entradas (Lotes)
+    dbc.Row([
+        dbc.Col([
+            html.H4("Registrar Entrada de Lote"),
+            dbc.Form([
+                dbc.Row([
+                    dbc.Label("Producto ID", width=2),
+                    dbc.Col(dbc.Input(type="number", id="entry-product-id", placeholder="ID del producto"), width=10),
+                ], className="mb-3"),
+                dbc.Row([
+                    dbc.Label("Cantidad", width=2),
+                    dbc.Col(dbc.Input(type="number", id="entry-quantity", placeholder="Cantidad a ingresar"), width=10),
+                ], className="mb-3"),
+                dbc.Row([
+                    dbc.Label("Fecha Venc.", width=2),
+                    dbc.Col(dcc.DatePickerSingle(id="entry-expiration-date", placeholder="Fecha de vencimiento"), width=10),
+                ], className="mb-3"),
+            ]),
+            dbc.Button("Registrar Entrada", id="register-entry-button", color="primary"),
+            dbc.Alert("...", id="entry-result-status", color="info", className="mt-3"),
+        ])
+    ], className="mb-5"),
+
+    # Sección para Registrar Salidas (Despachos)
+    dbc.Row([
+        # Columna para Despacho Simple (por Lote ID)
+        dbc.Col([
+            html.H4("Registrar Salida Simple (por Lote)"),
+            dbc.Form([
+                dbc.Row([
+                    dbc.Label("Lote ID", width=2),
+                    dbc.Col(dbc.Input(type="number", id="dispatch-lote-id", placeholder="ID del lote a despachar"), width=10),
+                ], className="mb-3"),
+                dbc.Row([
+                    dbc.Label("Cantidad", width=2),
+                    dbc.Col(dbc.Input(type="number", id="dispatch-lote-quantity", placeholder="Cantidad a despachar"), width=10),
+                ], className="mb-3"),
+            ]),
+            dbc.Button("Registrar Salida", id="register-dispatch-lote-button", color="warning"),
+            dbc.Alert("...", id="dispatch-lote-result-status", color="info", className="mt-3"),
+        ], width=6),
+
+        # Columna para Despacho FEFO (Inteligente)
+        dbc.Col([
+            html.H4("Registrar Salida FEFO (Automático)"),
+            dbc.Form([
+                dbc.Row([
+                    dbc.Label("Producto ID", width=2),
+                    dbc.Col(dbc.Input(type="number", id="dispatch-fefo-product-id", placeholder="ID del producto a despachar"), width=10),
+                ], className="mb-3"),
+                dbc.Row([
+                    dbc.Label("Cantidad", width=2),
+                    dbc.Col(dbc.Input(type="number", id="dispatch-fefo-quantity", placeholder="Cantidad a despachar"), width=10),
+                ], className="mb-3"),
+            ]),
+            dbc.Button("Despachar FEFO", id="dispatch-fefo-button", color="danger"),
+            dbc.Alert("...", id="dispatch-fefo-result-status", color="info", className="mt-3"),
+        ], width=6),
+    ]),
+], fluid=True, className="p-3")

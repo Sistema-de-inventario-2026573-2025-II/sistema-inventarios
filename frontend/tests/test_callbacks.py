@@ -1,47 +1,8 @@
 # sistema-inventarios/frontend/tests/test_callbacks.py
 import pytest
-from unittest.mock import Mock, call
+from unittest.mock import call
 from dash import html
 from layouts import products_layout, alerts_layout
-
-
-class ApiClientMock:
-    """
-    Clase auxiliar para crear un mock del cliente API (requests).
-    Permite añadir respuestas en cola y verificar las llamadas.
-    """
-    def __init__(self, mocker):
-        self.mocker = mocker
-        self._responses = []
-        self.patch = None
-
-    def add_response(self, json_data, status_code=200):
-        """Añade una respuesta simulada a la cola."""
-        mock_response = Mock()
-        mock_response.status_code = status_code
-        mock_response.json.return_value = json_data
-        self._responses.append(mock_response)
-
-    def start(self):
-        """Inicia el 'patch' con las respuestas configuradas."""
-        self.patch = self.mocker.patch(
-            "callbacks.requests.get", 
-            side_effect=self._responses
-        )
-        return self.patch
-        
-    def assert_has_calls(self, calls, any_order=False):
-        """Verifica que se hicieron las llamadas esperadas."""
-        self.patch.assert_has_calls(calls, any_order=any_order)
-
-
-@pytest.fixture
-def mock_api_client(mocker):
-    """
-    Fixture de Pytest que proporciona una instancia de ApiClientMock
-    para simplificar la simulación de llamadas a la API.
-    """
-    return ApiClientMock(mocker)
 
 
 def test_dash_app_import():
@@ -77,7 +38,7 @@ def test_update_products_table_callback(
         }
     ]
     mock_api_client.add_response(json_data=mock_api_response)
-    mock_api_client.start()
+    mock_api_client.start(method="get")
 
     # Configurar el contexto simulado para el trigger actual
     mock_callback_context.triggered = [{'prop_id': trigger_id}]
@@ -158,3 +119,82 @@ def test_update_alerts_dashboard(mock_api_client):
     # 3.3: Verificar los mensajes de estado
     assert "1 productos" in low_stock_msg
     assert "1 lotes" in expiring_msg
+    
+def test_register_inventory_entry_callback(mock_api_client):
+
+    """
+    Prueba el callback para registrar una nueva entrada de inventario (lote).
+    Debe devolver un mensaje de exito cuando la API responde correctamente.
+    """
+
+    # ETAPA 1: SETUP    
+    # Simulamos una respuesta exitosa de la API al crear un lote
+
+    mock_api_client.add_response(
+        json_data={"id": 100, "producto_id": 1, "cantidad_actual": 50},
+        status_code=201
+    )
+
+    mock_post = mock_api_client.start(method="post") # Usaremos POST esta vez
+
+    # ETAPA 2: LA PRUEBA
+    from callbacks import register_inventory_entry
+
+    # Llamamos al callback con datos de prueba
+    result_message, result_color = register_inventory_entry(
+        n_clicks=1,
+        product_id=1,
+        quantity=50,
+        expiration_date="2025-12-31"
+    )
+
+    # ETAPA 3: VERIFICACION
+    # 3.1: Verificar que se hizo la llamada POST correcta
+    mock_post.assert_called_once()
+
+    # 3.2: Verificar el mensaje de exito
+    assert "Lote registrado con éxito" in result_message
+    assert result_color == "success"
+        
+        
+def test_register_simple_dispatch_callback(mock_api_client):
+    """
+    Prueba el callback para registrar una salida simple por lote_id.
+    """
+    # SETUP
+    mock_api_client.add_response(
+        json_data={"message": "Salida registrada con éxito"},
+        status_code=200
+    )
+    mock_post = mock_api_client.start(method="post")
+
+    # TEST
+    from callbacks import register_simple_dispatch
+    result_message, result_color = register_simple_dispatch(1, 10, 5)
+
+    # VERIFY
+    mock_post.assert_called_once()
+    assert "Salida registrada con éxito" in result_message
+    assert result_color == "success"
+        
+        
+def test_register_fefo_dispatch_callback(mock_api_client):
+    """
+    Prueba el callback para registrar una salida FEFO.
+    """
+    # SETUP
+    mock_api_client.add_response(
+        json_data={"message": "Salida FEFO registrada con éxito"},
+        status_code=200
+    )
+    mock_post = mock_api_client.start(method="post")
+
+    # TEST
+    from callbacks import register_fefo_dispatch
+    result_message, result_color = register_fefo_dispatch(1, 1, 20)
+
+    # VERIFY
+    mock_post.assert_called_once()
+    assert "Salida FEFO registrada con éxito" in result_message
+    assert result_color == "success"
+        

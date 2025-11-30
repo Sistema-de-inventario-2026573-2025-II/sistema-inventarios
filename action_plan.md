@@ -70,7 +70,7 @@
 
 [X] Task 8.7 (RED): Alerts Dashboard UI (Layout + Callbacks to connect with Alerts API).
 
-[ ] Task 8.8: Inventory Management UI (Forms for Entries and Dispatches).
+[X] Task 8.8: Inventory Management UI (Forms for Entries and Dispatches).
 
 # Module 9: Production Deployment - [PENDING]
 

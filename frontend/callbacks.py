@@ -125,13 +125,129 @@ def display_page(pathname: str):
     logger.debug(f"Navegando a la pagina: {pathname}")
     
     # Import layouts inside the callback to prevent circular dependencies
-    from layouts import alerts_layout, products_layout
+    from layouts import alerts_layout, products_layout, inventory_layout
     
     if pathname == "/productos":
         return products_layout
     elif pathname == "/inventario":
-        # TODO: Crear el layout de inventario
-        return html.P("Aquí va la gestión de inventario.")
+        return inventory_layout
     else:
         # La pagina principal (/) es el dashboard de alertas
         return alerts_layout # <-- Usar el layout real
+
+@callback(
+    Output("entry-result-status", "children"),
+    Output("entry-result-status", "color"),
+    Input("register-entry-button", "n_clicks"),
+    State("entry-product-id", "value"),
+    State("entry-quantity", "value"),
+    State("entry-expiration-date", "date"),
+    prevent_initial_call=True
+)
+def register_inventory_entry(n_clicks, product_id, quantity, expiration_date):
+    """
+    Callback para registrar una nueva entrada de inventario (lote).
+    """
+    logger.info(f"Callback 'register_inventory_entry' disparado. Clicks: {n_clicks}")
+
+    if not all([product_id, quantity, expiration_date]):
+        logger.warning("Faltan datos en el formulario de registro de entrada.")
+        return "Todos los campos son obligatorios.", "warning"
+
+    try:
+        api_url = f"{API_BASE_URL}/inventario/entradas"
+        payload = {
+            "producto_id": product_id,
+            "cantidad": quantity,
+            "fecha_vencimiento": expiration_date,
+        }
+        logger.debug(f"Haciendo peticion POST a: {api_url} con payload: {payload}")
+        
+        response = requests.post(api_url, json=payload)
+        
+        if response.status_code == 201:
+            lote = response.json()
+            msg = f"Lote registrado con éxito. ID del Lote: {lote['id']}"
+            logger.info(msg)
+            return msg, "success"
+        else:
+            error_msg = f"Error de la API ({response.status_code}): {response.text}"
+            logger.error(error_msg)
+            return error_msg, "danger"
+            
+    except requests.exceptions.ConnectionError as e:
+        error_msg = f"Error de conexión a la API: {e}"
+        logger.error(error_msg, exc_info=True)
+        return "Error: No se pudo conectar a la API.", "danger"
+    except Exception as e:
+        error_msg = f"Error inesperado en callback: {e}"
+        logger.error(error_msg, exc_info=True)
+        return "Error inesperado en el servidor.", "danger"
+        
+@callback(
+    Output("dispatch-lote-result-status", "children"),
+    Output("dispatch-lote-result-status", "color"),
+    Input("register-dispatch-lote-button", "n_clicks"),
+    State("dispatch-lote-id", "value"),
+    State("dispatch-lote-quantity", "value"),
+    prevent_initial_call=True
+)
+def register_simple_dispatch(n_clicks, lote_id, quantity):
+    """
+    Callback para registrar una salida de inventario por ID de lote.
+    """
+    logger.info(f"Callback 'register_simple_dispatch' disparado. Clicks: {n_clicks}")
+
+    if not all([lote_id, quantity]):
+        return "ID de Lote y Cantidad son obligatorios.", "warning"
+
+    try:
+        api_url = f"{API_BASE_URL}/inventario/salidas/simple"
+        payload = {"lote_id": lote_id, "cantidad": quantity}
+        response = requests.post(api_url, json=payload)
+        
+        if response.status_code == 200:
+            msg = "Salida registrada con éxito."
+            logger.info(msg)
+            return msg, "success"
+        else:
+            return f"Error de la API ({response.status_code}): {response.text}", "danger"
+
+    except requests.exceptions.ConnectionError as e:
+        return "Error: No se pudo conectar a la API.", "danger"
+    except Exception as e:
+        return f"Error inesperado: {e}", "danger"
+
+@callback(
+    Output("dispatch-fefo-result-status", "children"),
+    Output("dispatch-fefo-result-status", "color"),
+    Input("dispatch-fefo-button", "n_clicks"),
+    State("dispatch-fefo-product-id", "value"),
+    State("dispatch-fefo-quantity", "value"),
+    prevent_initial_call=True
+)
+def register_fefo_dispatch(n_clicks, product_id, quantity):
+    """
+    Callback para registrar una salida de inventario usando la estrategia FEFO.
+    """
+    logger.info(f"Callback 'register_fefo_dispatch' disparado. Clicks: {n_clicks}")
+
+    if not all([product_id, quantity]):
+        return "ID de Producto y Cantidad son obligatorios.", "warning"
+
+    try:
+        api_url = f"{API_BASE_URL}/inventario/salidas/fefo"
+        payload = {"producto_id": product_id, "cantidad": quantity}
+        response = requests.post(api_url, json=payload)
+
+        if response.status_code == 200:
+            msg = "Salida FEFO registrada con éxito."
+            logger.info(msg)
+            return msg, "success"
+        else:
+            return f"Error de la API ({response.status_code}): {response.text}", "danger"
+
+    except requests.exceptions.ConnectionError as e:
+        return "Error: No se pudo conectar a la API.", "danger"
+    except Exception as e:
+        return f"Error inesperado: {e}", "danger"
