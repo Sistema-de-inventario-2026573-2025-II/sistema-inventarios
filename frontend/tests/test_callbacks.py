@@ -4,23 +4,45 @@ from unittest.mock import Mock, call
 from dash import html
 from layouts import products_layout, alerts_layout
 
+
+class ApiClientMock:
+    """
+    Clase auxiliar para crear un mock del cliente API (requests).
+    Permite añadir respuestas en cola y verificar las llamadas.
+    """
+    def __init__(self, mocker):
+        self.mocker = mocker
+        self._responses = []
+        self.patch = None
+
+    def add_response(self, json_data, status_code=200):
+        """Añade una respuesta simulada a la cola."""
+        mock_response = Mock()
+        mock_response.status_code = status_code
+        mock_response.json.return_value = json_data
+        self._responses.append(mock_response)
+
+    def start(self):
+        """Inicia el 'patch' con las respuestas configuradas."""
+        self.patch = self.mocker.patch(
+            "callbacks.requests.get", 
+            side_effect=self._responses
+        )
+        return self.patch
+        
+    def assert_has_calls(self, calls, any_order=False):
+        """Verifica que se hicieron las llamadas esperadas."""
+        self.patch.assert_has_calls(calls, any_order=any_order)
+
+
 @pytest.fixture
-def mock_api_get(mocker):
+def mock_api_client(mocker):
     """
-    Fixture de Pytest para "mockear" una llamada GET a la API
-    y devolver una respuesta controlada.
+    Fixture de Pytest que proporciona una instancia de ApiClientMock
+    para simplificar la simulación de llamadas a la API.
     """
-    # 1. Crear el objeto que "falsificara" la respuesta
-    mock_response = Mock()
-    mock_response.status_code = 200
-    
-    # 2. "Patch" (interceptar) la llamada 'requests.get'
-    mock_patch = mocker.patch("callbacks.requests.get", return_value=mock_response)
-    
-    # 3. Devolver ambos para que el test pueda usarlos
-    # (El mock_response para configurar la data,
-    # y el mock_patch para verificar que fue llamado)
-    yield mock_response, mock_patch
+    return ApiClientMock(mocker)
+
 
 def test_dash_app_import():
     """
@@ -32,49 +54,45 @@ def test_dash_app_import():
     except ImportError as e:
         assert False, f"Fallo la importacion de la app Dash: {e}"
 
-def test_update_products_table_callback(mock_api_get, mocker):
+@pytest.mark.parametrize(
+    "trigger_id, n_clicks, n_intervals",
+    [
+        ('refresh-products-button.n_clicks', 1, 0),
+        ('products-interval.n_intervals', 0, 1),
+    ]
+)
+def test_update_products_table_callback(
+    mock_api_client, mock_callback_context, trigger_id, n_clicks, n_intervals
+):
     """
-    Prueba el callback para actualizar la tabla de productos.
+    Prueba el callback para actualizar la tabla de productos (Task 8.6 - Refactor).
     Debe funcionar tanto por boton (manual) como por intervalo (auto).
-    (Task 8.5)
     """
     # ETAPA 1: SETUP
-    mock_response, _ = mock_api_get
-    
     mock_api_response = [
         {
             "id": 1,
             "nombre": "Producto de Prueba",
             "sku": "SKU-TEST-001",
-            # ... resto de campos
         }
     ]
-    mock_response.json.return_value = mock_api_response
+    mock_api_client.add_response(json_data=mock_api_response)
+    mock_api_client.start()
+
+    # Configurar el contexto simulado para el trigger actual
+    mock_callback_context.triggered = [{'prop_id': trigger_id}]
 
     # ETAPA 2: LA PRUEBA
     from callbacks import update_products_table
-
-    # Mockear el dash.callback_context para simular los triggers
-    mock_ctx = mocker.patch("callbacks.dash.callback_context")
-
-    # CASO A: Disparo manual (boton)
-    # Simular que el boton fue el que disparo el callback
-    mock_ctx.triggered = [{'prop_id': 'refresh-products-button.n_clicks'}]
-    # n_clicks=1, n_intervals=0
-    table_data, msg = update_products_table(n_clicks=1, n_intervals=0)
-    assert len(table_data) == 1
-    assert "1 productos" in msg
-
-    # CASO B: Disparo automatico (intervalo/carga inicial)
-    # Simular que el intervalo fue el que disparo el callback
-    mock_ctx.triggered = [{'prop_id': 'products-interval.n_intervals'}]
-    # n_clicks=None (o 0), n_intervals=1
-    table_data_auto, msg_auto = update_products_table(n_clicks=0, n_intervals=1)
+    table_data, msg = update_products_table(
+        n_clicks=n_clicks, n_intervals=n_intervals
+    )
     
     # ETAPA 3: VERIFICACION
-    # Debe devolver los mismos datos
-    assert table_data_auto == table_data
-    assert msg_auto == msg
+    assert len(table_data) == 1
+    assert table_data[0]["nombre"] == "Producto de Prueba"
+    assert "1 productos" in msg
+    mock_api_client.patch.assert_called_once()
 
 def test_navigation_callback():
     """
@@ -100,34 +118,24 @@ def test_navigation_callback():
     assert page_content == alerts_layout # <-- ESTA ES LA CORRECCIÓN 
 
 
-def test_update_alerts_dashboard(mocker):
+def test_update_alerts_dashboard(mock_api_client):
     """
-    Prueba el callback del dashboard de alertas (Task 8.x).
+    Prueba el callback del dashboard de alertas (Task 8.6 - Refactor).
     Debe llamar a dos endpoints y devolver dos listas de datos.
     """
     # ETAPA 1: SETUP
-    # Mockear dos respuestas de API diferentes
-    mock_low_stock_data = [{"sku": "SKU-LOW-001", "cantidad_actual": 1}]
-    mock_expiring_data = [{"id": 99, "cantidad_actual": 5}]
-
-    # Crear los objetos de respuesta
-    mock_low_stock_response = Mock(status_code=200)
-    mock_low_stock_response.json.return_value = mock_low_stock_data
-    
-    mock_expiring_response = Mock(status_code=200)
-    mock_expiring_response.json.return_value = mock_expiring_data
-
-    # Usamos mocker.patch con 'side_effect' para que devuelva
-    # un valor diferente cada vez que se llama.
-    mock_get = mocker.patch(
-        "callbacks.requests.get", 
-        side_effect=[mock_low_stock_response, mock_expiring_response]
+    # Configurar las respuestas simuladas de la API en orden
+    mock_api_client.add_response(
+        json_data=[{"sku": "SKU-LOW-001", "cantidad_actual": 1}]
     )
+    mock_api_client.add_response(
+        json_data=[{"id": 99, "cantidad_actual": 5}]
+    )
+    mock_get = mock_api_client.start()
 
     # ETAPA 2: LA PRUEBA
     from callbacks import update_alerts_dashboard
 
-    # El callback se dispara con la URL de la pagina
     (
         low_stock_data, 
         expiring_data, 
@@ -141,7 +149,7 @@ def test_update_alerts_dashboard(mocker):
         call("http://127.0.0.1:8000/api/v1/alertas/stock-minimo"),
         call("http://127.0.0.1:8000/api/v1/alertas/por-vencer?days=30")
     ]
-    mock_get.assert_has_calls(expected_calls)
+    mock_api_client.assert_has_calls(expected_calls)
     
     # 3.2: Verificar los datos devueltos
     assert low_stock_data[0]["sku"] == "SKU-LOW-001"
