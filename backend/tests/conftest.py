@@ -1,6 +1,6 @@
 # sistema-inventarios/backend/tests/conftest.py
 import pytest
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, StaticPool
 from sqlalchemy.orm import sessionmaker, Session
 from fastapi.testclient import TestClient
 
@@ -18,15 +18,18 @@ import app.models  # Importamos el paquete de modelos (ESTO ES VITAL)
 from app.main import app  # Importar la app de FastAPI
 from app.api.deps import get_db  # Importar la dependencia a sobreescribir
 
-TEST_DATABASE_URL = "sqlite:///./test.db"
+TEST_DATABASE_URL = "sqlite:///:memory:"
 
 connect_args = {}
+pool = None
 if TEST_DATABASE_URL.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
+    pool = StaticPool
 
 engine = create_engine(
     TEST_DATABASE_URL, 
-    connect_args=connect_args
+    connect_args=connect_args,
+    poolclass=pool
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
