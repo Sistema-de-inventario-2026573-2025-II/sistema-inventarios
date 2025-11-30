@@ -16,6 +16,7 @@ columnas_productos = [
 
 # El layout principal de la seccion de productos
 products_layout = dbc.Container([
+    dcc.Interval(id="products-interval", interval=60*1000, n_intervals=0),
     dbc.Row([
         dbc.Col(html.H2("Gestión de Productos"), width=10),
         dbc.Col(

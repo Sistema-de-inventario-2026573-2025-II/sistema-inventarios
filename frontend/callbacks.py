@@ -1,9 +1,8 @@
 import logging
 import requests
+import dash
 from dash import callback, Output, Input, State, no_update, html
-from dashboard import app
 from ui_config import get_frontend_settings
-from layouts import products_layout
 
 logger = logging.getLogger(__name__)
 
@@ -14,16 +13,25 @@ logger.info(f"Conectando a la API en: {API_BASE_URL}")
 @callback(
     Output("products-table", "data"), 
     Output("products-table-status", "children"), 
-    Input("refresh-products-button", "n_clicks"), 
-    prevent_initial_call=True 
+    Input("refresh-products-button", "n_clicks"),
+    Input("products-interval", "n_intervals")
 )
-def update_products_table(n_clicks: int) -> (list, str):
+def update_products_table(n_clicks: int, n_intervals: int) -> (list, str):
     """
     Callback para actualizar la tabla de productos al hacer clic
-    en el boton de refrescar.
+    en el boton de refrescar O por el intervalo automatico.
     """
-    logger.info(f"Callback 'update_products_table' disparado por click {n_clicks}")
-    
+    trigger_id = "unknown"
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        logger.warning("Callback 'update_products_table' disparado sin trigger conocido.")
+    else:
+        trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    logger.info(
+        f"Callback 'update_products_table' disparado por: {trigger_id} "
+        f"(clicks={n_clicks}, intervals={n_intervals})"
+    )
     try:
         api_url = f"{API_BASE_URL}/productos"
         logger.debug(f"Haciendo peticion GET a: {api_url}")
@@ -116,8 +124,8 @@ def display_page(pathname: str):
     """
     logger.debug(f"Navegando a la pagina: {pathname}")
     
-    # Importar el layout de alertas
-    from layouts import products_layout, alerts_layout
+    # Import layouts inside the callback to prevent circular dependencies
+    from layouts import alerts_layout, products_layout
     
     if pathname == "/productos":
         return products_layout

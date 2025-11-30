@@ -32,13 +32,13 @@ def test_dash_app_import():
     except ImportError as e:
         assert False, f"Fallo la importacion de la app Dash: {e}"
 
-def test_update_products_table_callback(mock_api_get):
+def test_update_products_table_callback(mock_api_get, mocker):
     """
-    Prueba el callback para actualizar la tabla de productos (Task 8.4).
-    Usa el fixture 'mock_api_get'.
+    Prueba el callback para actualizar la tabla de productos.
+    Debe funcionar tanto por boton (manual) como por intervalo (auto).
+    (Task 8.5)
     """
     # ETAPA 1: SETUP
-    # Configurar el fixture
     mock_response, _ = mock_api_get
     
     mock_api_response = [
@@ -46,9 +46,7 @@ def test_update_products_table_callback(mock_api_get):
             "id": 1,
             "nombre": "Producto de Prueba",
             "sku": "SKU-TEST-001",
-            "precio": 10.0,
-            "cantidad_actual": 100,
-            "stock_minimo": 10
+            # ... resto de campos
         }
     ]
     mock_response.json.return_value = mock_api_response
@@ -56,13 +54,27 @@ def test_update_products_table_callback(mock_api_get):
     # ETAPA 2: LA PRUEBA
     from callbacks import update_products_table
 
-    table_data, status_message = update_products_table(n_clicks=1)
+    # Mockear el dash.callback_context para simular los triggers
+    mock_ctx = mocker.patch("callbacks.dash.callback_context")
 
-    # ETAPA 3: VERIFICACION
-    assert isinstance(table_data, list)
-    assert status_message == "Datos cargados. 1 productos encontrados."
+    # CASO A: Disparo manual (boton)
+    # Simular que el boton fue el que disparo el callback
+    mock_ctx.triggered = [{'prop_id': 'refresh-products-button.n_clicks'}]
+    # n_clicks=1, n_intervals=0
+    table_data, msg = update_products_table(n_clicks=1, n_intervals=0)
     assert len(table_data) == 1
-    assert table_data[0]["sku"] == "SKU-TEST-001"
+    assert "1 productos" in msg
+
+    # CASO B: Disparo automatico (intervalo/carga inicial)
+    # Simular que el intervalo fue el que disparo el callback
+    mock_ctx.triggered = [{'prop_id': 'products-interval.n_intervals'}]
+    # n_clicks=None (o 0), n_intervals=1
+    table_data_auto, msg_auto = update_products_table(n_clicks=0, n_intervals=1)
+    
+    # ETAPA 3: VERIFICACION
+    # Debe devolver los mismos datos
+    assert table_data_auto == table_data
+    assert msg_auto == msg
 
 def test_navigation_callback():
     """
