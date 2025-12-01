@@ -1,9 +1,11 @@
 import logging
 import requests
 import dash
+import plotly.express as px
 from dash import callback, Output, Input, State, no_update, html
 from typing import List
 from ui_config import get_frontend_settings, THEMES
+from callbacks_resources.reports_fetch import fetch_top_available_products
 
 logger = logging.getLogger(__name__)
 
@@ -386,3 +388,37 @@ def register_fefo_dispatch(n_clicks, product_id, quantity):
         return "Error: No se pudo conectar a la API.", "danger"
     except Exception as e:
         return f"Error inesperado: {e}", "danger"
+
+@callback(
+    Output("top-inventory-chart", "figure"),
+    Output("top-inventory-status", "children"),
+    Input("top-n-products-input", "value"),
+    Input("refresh-top-inventory-button", "n_clicks"),
+    Input("top-inventory-interval", "n_intervals")
+)
+def update_top_inventory_chart(n_products, n_clicks, n_intervals):
+    """
+    Callback para actualizar el grafico de productos mas vendidos.
+    """
+    logger.info(f"Callback 'update_top_inventory_chart' disparado. Clicks: {n_clicks}")
+
+    try:
+        df = fetch_top_available_products(API_BASE_URL, top_n=n_products)
+        
+        if df.empty:
+            logger.warning("No se encontraron datos para el grafico de top inventario.")
+            return px.bar(title="No hay datos disponibles", width=300, height=50), "No hay datos disponibles."
+        
+        fig = px.bar(
+            df,
+            x="nombre",
+            y="cantidad_actual",
+            title=f"Top {n_products} Productos con Mayor Disponibilidad",
+            labels={"nombre": "Producto", "cantidad_actual": "Cantidad Actual"},
+            width=800, height=800
+        )
+        logger.info("Grafico de top inventario actualizado exitosamente.")
+        return fig, f"Grafico actualizado con {len(df)} productos."
+    except Exception as e:
+        logger.error(f"Error al actualizar el grafico de top inventario: {e}", exc_info=True)
+        return px.bar(title="Error al cargar datos", width=300, height=50), "Error al cargar datos."

@@ -17,6 +17,31 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 @router.get(
+    "/top-productos-disponibles",
+    response_model=List[product_schema.Producto], # O un schema mas simple si solo se necesita lo basico
+    summary="Reporte de los productos con mayor disponibilidad"
+)
+def get_top_available_products_report(
+    db: Session = Depends(get_db),
+    top_n: int = Query(
+        5,
+        gt=0,
+        le=100,
+        description="Numero de productos a incluir en el reporte"
+    )
+) -> List[product_schema.Producto]:
+    """
+    Genera un reporte de los N productos con mayor cantidad_actual en inventario.
+    """
+    logger.info(f"Generando reporte de top {top_n} productos disponibles...")
+    try:
+        top_products = reports_service.get_top_available_products(db=db, top_n=top_n)
+        return top_products
+    except Exception as e:
+        logger.error(f"Error inesperado al generar reporte de productos disponibles: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error interno del servidor al generar reporte de productos disponibles.")
+
+@router.get(
     "/inventario-basico",
     response_model=List[product_schema.Producto], # O un schema mas simple si solo se necesita lo basico
     summary="Reporte basico de inventario por producto"
