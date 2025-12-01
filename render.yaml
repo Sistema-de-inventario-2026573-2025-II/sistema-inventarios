@@ -1,0 +1,62 @@
+services:
+  # --------------------------------------------------------------------------------
+  # BACKEND SERVICE (FastAPI)
+  # --------------------------------------------------------------------------------
+  - type: web
+    name: sistema-inventarios-backend
+    env: docker
+    plan: free
+    region: oregon
+    
+    # Build Context (Root of the repo)
+    dockerContext: .
+    dockerfilePath: Dockerfile
+
+    # Start Command
+    # Runs migration script first, then starts Gunicorn
+    dockerCommand: bash -c "/opt/venv/bin/python /app/backend/app/db/init_db.py && /opt/venv/bin/gunicorn -c /app/backend/gunicorn.conf.py backend.main:app"
+
+    # Environment Variables
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: POSTGRES_SERVER
+        sync: false # User must provide this in Dashboard
+      - key: POSTGRES_USER
+        sync: false
+      - key: POSTGRES_PASSWORD
+        sync: false
+      - key: POSTGRES_DB
+        sync: false
+      - key: GUNICORN_LOGLEVEL
+        value: info
+
+  # --------------------------------------------------------------------------------
+  # FRONTEND SERVICE (Dash)
+  # --------------------------------------------------------------------------------
+  - type: web
+    name: sistema-inventarios-frontend
+    env: docker
+    plan: free
+    region: oregon
+
+    dockerContext: .
+    dockerfilePath: Dockerfile
+
+    # Start Command
+    dockerCommand: /opt/venv/bin/python /app/frontend/app.py
+
+    envVars:
+      - key: API_BASE_URL
+        fromService:
+          type: web
+          name: sistema-inventarios-backend
+          property: url
+        # This magic 'fromService' automatically injects the backend URL!
+        # It will look like: https://sistema-inventarios-backend.onrender.com
+        # We need to append /api/v1/ in the code or here? 
+        # The code defaults to ".../api/v1", but if we overwrite it, we must be precise.
+        # frontend/ui_config.py says: API_BASE_URL: str = os.getenv("API_BASE_URL", "...")
+        # If Render injects "https://...", we might need to append "/api/v1".
+        # Let's check this logic in the next thought.
+

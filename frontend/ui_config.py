@@ -15,8 +15,16 @@ class FrontendSettings:
     """
     Gestiona la configuracion del frontend, leyendo de variables de entorno.
     """
-    # Valor por defecto para desarrollo (corriendo ambos localmente)
-    API_BASE_URL: str = os.getenv("API_BASE_URL", "http://127.0.0.1:8000/api/v1")
+    def __init__(self):
+        # Obtener URL base. Render inyecta solo el dominio (ej: https://app.onrender.com)
+        base = os.getenv("API_BASE_URL", "http://127.0.0.1:8000/api/v1")
+        
+        # Asegurar que termine en /api/v1 para que los endpoints funcionen
+        if not base.endswith("/api/v1"):
+            # Eliminar trailing slash si existe antes de agregar el sufijo
+            base = base.rstrip("/") + "/api/v1"
+            
+        self.API_BASE_URL = base
 
 @lru_cache()
 def get_frontend_settings() -> FrontendSettings:

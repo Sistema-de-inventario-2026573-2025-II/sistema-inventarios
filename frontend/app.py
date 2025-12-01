@@ -21,5 +21,7 @@ app.layout = html.Div([
 
 # --- Entrypoint para Correr el Servidor ---
 if __name__ == '__main__':
-    logger.info("Iniciando servidor de Dash en http://127.0.0.1:8050")
-    app.run(debug=True, port=8050)
+    import os
+    port = int(os.environ.get("PORT", 8050))
+    logger.info(f"Iniciando servidor de Dash en http://0.0.0.0:{port}")
+    app.run(debug=False, host="0.0.0.0", port=port)

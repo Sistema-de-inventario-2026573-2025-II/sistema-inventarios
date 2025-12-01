@@ -7,7 +7,9 @@ workers = int(os.environ.get('GUNICORN_PROCESSES', '2'))
 threads = int(os.environ.get('GUNICORN_THREADS', '4'))
 
 # Host y puerto para enlazar
-bind = os.environ.get('GUNICORN_BIND', '0.0.0.0:8000')
+# Render proporciona la variable PORT. Si existe, la usamos.
+port = os.environ.get('PORT', '8000')
+bind = os.environ.get('GUNICORN_BIND', f'0.0.0.0:{port}')
 
 # Clase de worker de Uvicorn para FastAPI
 worker_class = "uvicorn.workers.UvicornWorker"
