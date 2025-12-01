@@ -2,6 +2,7 @@ import logging
 import requests
 import dash
 from dash import callback, Output, Input, State, no_update, html
+from typing import List
 from ui_config import get_frontend_settings
 
 logger = logging.getLogger(__name__)
@@ -72,8 +73,8 @@ def update_alerts_dashboard(pathname: str) -> tuple[list, list, str, str]:
     logger.info("Callback 'update_alerts_dashboard' disparado por carga de pagina.")
     
     # Estado inicial
-    low_stock_data = []
-    expiring_data = []
+    processed_low_stock_data = []
+    processed_expiring_data = []
     low_stock_msg = ""
     expiring_msg = ""
     
@@ -84,11 +85,13 @@ def update_alerts_dashboard(pathname: str) -> tuple[list, list, str, str]:
         low_stock_response = requests.get(low_stock_url)
         
         if low_stock_response.status_code == 200:
-            low_stock_data = low_stock_response.json()
-            low_stock_msg = f"Se encontraron {len(low_stock_data)} productos en alerta."
-            logger.debug("Alertas de stock minimo obtenidas.")
+            alerts_data = low_stock_response.json()
+            processed_low_stock_data = _process_low_stock_alerts(alerts_data)
+            low_stock_msg = f"Se encontraron {len(processed_low_stock_data)} alertas de stock mínimo."
+            logger.debug("Alertas de stock minimo obtenidas y procesadas.")
         else:
-            low_stock_msg = f"Error de API: {low_stock_response.status_code}"
+            low_stock_msg = f"Error de API al obtener stock mínimo: {low_stock_response.status_code}"
+            logger.error(low_stock_msg)
             
         # 2. Obtener Alertas de Lotes por Vencer (30 dias)
         expiring_url = f"{API_BASE_URL}/alertas/por-vencer?days=30"
@@ -96,22 +99,56 @@ def update_alerts_dashboard(pathname: str) -> tuple[list, list, str, str]:
         expiring_response = requests.get(expiring_url)
         
         if expiring_response.status_code == 200:
-            expiring_data = expiring_response.json()
-            expiring_msg = f"Se encontraron {len(expiring_data)} lotes por vencer."
-            logger.debug("Alertas de lotes por vencer obtenidas.")
+            alerts_data = expiring_response.json()
+            processed_expiring_data = _process_expiring_lotes_alerts(alerts_data)
+            expiring_msg = f"Se encontraron {len(processed_expiring_data)} alertas de lotes por vencer."
+            logger.debug("Alertas de lotes por vencer obtenidas y procesadas.")
         else:
-            expiring_msg = f"Error de API: {expiring_response.status_code}"
+            expiring_msg = f"Error de API al obtener lotes por vencer: {expiring_response.status_code}"
+            logger.error(expiring_msg)
 
     except requests.exceptions.ConnectionError as e:
         logger.error(f"Error de conexion a la API: {e}", exc_info=True)
-        error_msg = "Error: No se pudo conectar a la API."
+        error_msg = "Error: No se pudo conectar a la API. ¿Está el backend corriendo?"
         return [], [], error_msg, error_msg
     except Exception as e:
         logger.error(f"Error inesperado en callback de alertas: {e}", exc_info=True)
         error_msg = "Error inesperado."
         return [], [], error_msg, error_msg
 
-    return low_stock_data, expiring_data, low_stock_msg, expiring_msg
+    return processed_low_stock_data, processed_expiring_data, low_stock_msg, expiring_msg
+
+def _process_low_stock_alerts(alerts: List[dict]) -> List[dict]:
+    """Procesa alertas de stock mínimo para visualización en tabla."""
+    processed_data = []
+    for alert in alerts:
+        metadata = alert.get("metadata_json", {})
+        processed_data.append({
+            "id": alert["id"],
+            "producto_nombre": metadata.get("nombre", "N/A"),
+            "sku": metadata.get("sku", "N/A"),
+            "cantidad_actual": metadata.get("cantidad_actual", "N/A"),
+            "stock_minimo": metadata.get("stock_minimo", "N/A"),
+            "mensaje": alert.get("mensaje", "N/A"),
+        })
+    return processed_data
+
+def _process_expiring_lotes_alerts(alerts: List[dict]) -> List[dict]:
+    """Procesa alertas de lotes por vencer para visualización en tabla."""
+    processed_data = []
+    for alert in alerts:
+        metadata = alert.get("metadata_json", {})
+        processed_data.append({
+            "id": alert["id"],
+            "entidad_id": alert["entidad_id"], # El lote ID es la entidad_id
+            "producto_nombre": metadata.get("producto_nombre", "N/A"),
+            "producto_sku": metadata.get("producto_sku", "N/A"),
+            "cantidad_actual": metadata.get("cantidad_actual", "N/A"),
+            "fecha_vencimiento": metadata.get("fecha_vencimiento", "N/A"),
+            "mensaje": alert.get("mensaje", "N/A"),
+        })
+    return processed_data
+
     
 @callback(
     Output("page-content", "children"),
@@ -158,7 +195,7 @@ def register_inventory_entry(n_clicks, product_id, quantity, expiration_date):
         api_url = f"{API_BASE_URL}/inventario/entradas"
         payload = {
             "producto_id": product_id,
-            "cantidad": quantity,
+            "cantidad_recibida": quantity,
             "fecha_vencimiento": expiration_date,
         }
         logger.debug(f"Haciendo peticion POST a: {api_url} con payload: {payload}")
@@ -202,11 +239,11 @@ def register_simple_dispatch(n_clicks, lote_id, quantity):
         return "ID de Lote y Cantidad son obligatorios.", "warning"
 
     try:
-        api_url = f"{API_BASE_URL}/inventario/salidas/simple"
+        api_url = f"{API_BASE_URL}/inventario/salidas"
         payload = {"lote_id": lote_id, "cantidad": quantity}
         response = requests.post(api_url, json=payload)
         
-        if response.status_code == 200:
+        if response.status_code == 201:
             msg = "Salida registrada con éxito."
             logger.info(msg)
             return msg, "success"
@@ -236,7 +273,7 @@ def register_fefo_dispatch(n_clicks, product_id, quantity):
         return "ID de Producto y Cantidad son obligatorios.", "warning"
 
     try:
-        api_url = f"{API_BASE_URL}/inventario/salidas/fefo"
+        api_url = f"{API_BASE_URL}/inventario/despachar"
         payload = {"producto_id": product_id, "cantidad": quantity}
         response = requests.post(api_url, json=payload)
 

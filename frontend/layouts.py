@@ -88,17 +88,22 @@ content_layout = html.Div(
 
 # Definir columnas para las tablas de alertas
 columnas_stock_bajo = [
+    {"name": "ID Alerta", "id": "id"},
+    {"name": "Producto", "id": "producto_nombre"},
     {"name": "SKU", "id": "sku"},
-    {"name": "Nombre", "id": "nombre"},
     {"name": "Stock Actual", "id": "cantidad_actual"},
     {"name": "Stock Mínimo", "id": "stock_minimo"},
+    {"name": "Mensaje", "id": "mensaje"},
 ]
 
 columnas_por_vencer = [
-    {"name": "Lote ID", "id": "id"},
-    {"name": "Producto SKU", "id": "producto_sku"}, # Asumimos que el API lo dara
-    {"name": "Stock Lote", "id": "cantidad_actual"},
+    {"name": "ID Alerta", "id": "id"},
+    {"name": "Lote ID", "id": "entidad_id"},
+    {"name": "Producto", "id": "producto_nombre"},
+    {"name": "SKU", "id": "producto_sku"},
+    {"name": "Cantidad Lote", "id": "cantidad_actual"},
     {"name": "Fecha Venc.", "id": "fecha_vencimiento"},
+    {"name": "Mensaje", "id": "mensaje"},
 ]
 
 alerts_layout = dbc.Container([

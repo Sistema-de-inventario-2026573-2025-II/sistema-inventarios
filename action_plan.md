@@ -54,7 +54,7 @@
 
 [X] Task 7.2: Robust error handling (try/except) in endpoints.
 
-# Module 8: Frontend (UI) and Reports (Dash) - [IN PROGRESS]
+# Module 8: Frontend (UI) and Reports (Dash) - [COMPLETED]
 
 [X] Task 8.1: Frontend Structure (app/dashboard/layouts/callbacks).
 
@@ -72,16 +72,27 @@
 
 [X] Task 8.8: Inventory Management UI (Forms for Entries and Dispatches).
 
+[ ] Task 8.9: Dark Theme Toggle (Frontend).
+[ ] Task 8.10: Lotes Table UI.
+[ ] Task 8.11: UX Improvement: Product dropdown for inventory entry.
+[ ] Task 8.12: UX Improvement: Smart dispatch (FEFO) from UI.
+
 # Module 9: Production Deployment - [PENDING]
 
-[ ] Task 9.1: Gunicorn configuration.
+[X] Task 9.1: Gunicorn configuration.
 
-[ ] Task 9.2: PostgreSQL Configuration (Prod).
+[X] Task 9.2: PostgreSQL Configuration (Prod).
 
-[ ] Task 9.3: Migration/Initialization script for Prod.
+[X] Task 9.3: Migration/Initialization script for Prod.
 
 # Module 10: Optimization and Caching - [PENDING]
 
-[ ] Task 10.1: Implement Caching for alerts (invalidation by events).
+[X] Task 10.1: Implement Caching for alerts (invalidation by events).
 
-[ ] Task 10.2: Refactor to CQRS pattern (Dedicated Alerts Table for fast reads).
+[X] Task 10.2: Refactor to CQRS pattern (Dedicated Alerts Table for fast reads).
+
+# Module 11: Reporting - [PENDING]
+
+[ ] Task 11.1: Basic Inventory Report (current stock per product).
+[ ] Task 11.2: Expiration Report (lotes nearing expiration).
+[ ] Task 11.3: Movement Report (ins and outs in a date range).

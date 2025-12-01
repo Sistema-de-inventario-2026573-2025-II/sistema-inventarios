@@ -1,45 +1,36 @@
-# SESSION LOG SUMMARY
 
-## SETUP & INFRASTRUCTURE
 
-Established strict TDD workflow with uv and pytest.
+## Module 9: Production Deployment
 
-Created robust folder structure separating Backend and Frontend.
+### Task 9.1: Gunicorn Configuration
 
-Configured Docker (Multi-stage) and pyproject.toml for dependency management.
+- Updated `backend/gunicorn.conf.py` to use Spanish comments and variable names, aligning with project rules.
+- Added a `timeout` setting for Gunicorn workers to enhance stability in production environments.
+- Maintained the use of environment variables (`GUNICORN_PROCESSES`, `GUNICORN_THREADS`, `GUNICORN_BIND`, `GUNICORN_LOGLEVEL`, `GUNICORN_TIMEOUT`) for flexible deployment configuration.
 
-Implemented centralized, configurable logging (DEBUG/INFO).
+### Task 9.2: PostgreSQL Configuration (Prod)
 
-## BACKEND DEVELOPMENT (FastAPI)
+- Verified that `backend/app/core/config.py` already handles dynamic PostgreSQL connection string construction using environment variables.
+- Updated `backend/.env_example` to explicitly include `POSTGRES_SERVER`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` environment variables for clearer configuration by developers.
+- Clarified in `backend/.env_example` that `DATABASE_URL` for PostgreSQL is automatically constructed when these variables are set.
 
-Products Module: Full CRUD implemented. Validation via Pydantic schemas.
+## Module 10: Optimization and Caching
 
-Inventory Module: - Implemented "Entradas" (Inbound) logic.
+### Task 10.1: Implement Caching for Alerts (Invalidation by Events)
 
-Implemented "Salidas" (Outbound) with stock validation (InsufficientStockError).
+- Verified that caching for alerts (`check_stock_minimo` and `check_lotes_por_vencer`) was already implemented in `backend/app/services/alerts.py`.
+- Confirmed the use of `app.core.cache.MemoryCache` for in-memory caching.
+- Noted that `invalidate_pattern` method in `MemoryCache` provides the mechanism for invalidation by events, as per the task requirements.
 
-Implemented complex FEFO (First Expired, First Out) smart dispatch logic using transactional integrity.
+### Task 10.2: Refactor to CQRS pattern (Dedicated Alerts Table for fast reads)
 
-Alerts Module: - Created services for "Low Stock" and "Expiring Soon".
-
-Exposed services via dedicated API endpoints (/api/v1/alertas).
-
-Refactoring: Applied logging and error handling wrappers to all CRUD/Endpoint layers.
-
-## FRONTEND DEVELOPMENT (Dash)
-
-Architecture: Solved circular import issues by splitting app.py, dashboard.py, layouts.py, and callbacks.py.
-
-Navigation: Implemented client-side routing via dcc.Location.
-
-Products UI: Implemented a data table with auto-refresh capability (dcc.Interval).
-
-Testing: Implemented unit testing for Dash callbacks using pytest-mock to mock API calls.
-
-## PENDING ACTIONS & KNOWN DEBT
-
-Refactor Needed: Frontend tests currently duplicate mock setup logic. Needs a pytest fixture.
-
-Upcoming Feature: Alerts Dashboard UI needs to be built.
-
-Future Optimization: Database querying for alerts is expensive; planned refactor to Event-Driven/CQRS architecture in Module 10.
+- Created `backend/app/models/alerta.py` for the new `Alerta` ORM model.
+- Created `backend/app/schemas/alerta.py` for the `Alerta` Pydantic schema.
+- Modified `backend/app/models/__init__.py` to include the `Alerta` model.
+- Verified that `init_db.py` correctly creates the `alertas` table.
+- Created `backend/app/crud/crud_alerta.py` with CRUD operations for the `Alerta` model.
+- Refactored `check_stock_minimo` in `backend/app/services/alerts.py` to manage `Alerta` table entries.
+- Refactored `check_lotes_por_vencer` into `check_lotes_por_vencer_and_manage_alerts` in `backend/app/services/alerts.py` to manage `Alerta` table entries.
+- Added `get_alertas_activas_read` in `backend/app/services/alerts.py` to serve as the read model for active alerts.
+- Updated API endpoints in `backend/app/api/endpoints/alerts.py` to use `get_alertas_activas_read` and return `List[AlertaInDB]`.
+- Rewrote relevant tests in `backend/tests/test_services.py` and `backend/tests/api/test_alerts.py` to align with the new CQRS-based alert management.
