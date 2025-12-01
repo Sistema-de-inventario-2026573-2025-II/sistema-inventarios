@@ -16,6 +16,25 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 @router.get(
+    "/lotes",
+    response_model=List[Lote]
+)
+def read_lotes(
+    *,
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100
+    ) -> List[Lote]:
+    """
+    Obtiene una lista de lotes.
+    """
+
+    lotes = crud_inventory.get_lotes(db=db, skip=skip, limit=limit)
+    if not lotes:
+        raise HTTPException(status_code=404, detail="No hay lotes disponibles")
+    return lotes
+
+@router.get(
     "/lotes/{lote_id}",
     response_model=Lote
 )

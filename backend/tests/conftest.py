@@ -123,7 +123,7 @@ def lote_model_in_db(db_session: Session, product_model_in_db: Producto) -> Lote
     db_session.refresh(lote)
     return lote
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="function", autouse=False)
 def low_stock_product_setup(test_client: TestClient) -> dict:
     """
     Fixture que crea un producto que esta por debajo

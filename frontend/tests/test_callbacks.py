@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import call
 from dash import html
-from layouts import products_layout, alerts_layout
+import frontend.layouts as layouts # Import all layouts from frontend.layouts
 
 
 def test_dash_app_import():
@@ -60,37 +60,77 @@ def test_navigation_callback():
     Prueba el callback de navegacion principal (display_page).
     """
     # ETAPA 1: SETUP
-    # (No es necesario importar 'layouts' aquí, ya está arriba)
+    # No es necesario importar 'layouts' aquí para la prueba de navegacion,
+    # ya que display_page importa el modulo completo.
 
     # ETAPA 2: LA PRUEBA
-    # Importar desde la ubicacion correcta
     from callbacks import display_page
 
     # 1. Probar la pagina de productos
     page_content = display_page(pathname="/productos")
-    assert page_content == products_layout
+    assert page_content.id == layouts.products_layout.id
 
-    # 2. Probar la pagina principal (Alertas)
+    # 2. Probar la pagina de inventario
+    page_content = display_page(pathname="/inventario")
+    assert page_content.id == layouts.inventory_layout.id
+
+    # 3. Probar la pagina de reportes
+    page_content = display_page(pathname="/reportes")
+    assert page_content.id == layouts.reports_layout.id
+
+    # 4. Probar la pagina principal (Alertas)
     page_content = display_page(pathname="/")
-    assert page_content == alerts_layout  # <-- ESTA ES LA CORRECCIÓN
+    assert page_content.id == layouts.alerts_layout.id
 
-    # 3. Probar una pagina desconocida (debe ir a la pagina de Alertas)
+    # 5. Probar una pagina desconocida (debe ir a la pagina de Alertas)
     page_content = display_page(pathname="/pagina-mala")
-    assert page_content == alerts_layout # <-- ESTA ES LA CORRECCIÓN 
+    assert page_content.id == layouts.alerts_layout.id
 
 
 def test_update_alerts_dashboard(mock_api_client):
     """
-    Prueba el callback del dashboard de alertas (Task 8.6 - Refactor).
-    Debe llamar a dos endpoints y devolver dos listas de datos.
+    Prueba el callback del dashboard de alertas.
+    Debe llamar a dos endpoints y devolver dos listas de datos procesados.
     """
     # ETAPA 1: SETUP
-    # Configurar las respuestas simuladas de la API en orden
+    # Configurar las respuestas simuladas de la API en orden (AlertaInDB schema)
     mock_api_client.add_response(
-        json_data=[{"sku": "SKU-LOW-001", "cantidad_actual": 1}]
+        json_data=[
+            {
+                "id": 1,
+                "tipo_alerta": "stock_minimo",
+                "entidad_id": 101,
+                "entidad_tipo": "producto",
+                "mensaje": "Alerta de stock minimo para Producto Test",
+                "fecha_creacion": "2025-01-01T12:00:00",
+                "esta_activa": True,
+                "metadata_json": {
+                    "nombre": "Producto Test",
+                    "sku": "SKU-TEST-001",
+                    "cantidad_actual": 5,
+                    "stock_minimo": 10
+                }
+            }
+        ]
     )
     mock_api_client.add_response(
-        json_data=[{"id": 99, "cantidad_actual": 5}]
+        json_data=[
+            {
+                "id": 2,
+                "tipo_alerta": "por_vencer_30",
+                "entidad_id": 201,
+                "entidad_tipo": "lote",
+                "mensaje": "Alerta de lote por vencer para Lote Test",
+                "fecha_creacion": "2025-01-01T12:00:00",
+                "esta_activa": True,
+                "metadata_json": {
+                    "producto_nombre": "Producto Lote Test",
+                    "producto_sku": "SKU-LOTE-TEST",
+                    "cantidad_actual": 20,
+                    "fecha_vencimiento": "2025-01-30"
+                }
+            }
+        ]
     )
     mock_get = mock_api_client.start()
 
@@ -112,13 +152,21 @@ def test_update_alerts_dashboard(mock_api_client):
     ]
     mock_api_client.assert_has_calls(expected_calls)
     
-    # 3.2: Verificar los datos devueltos
-    assert low_stock_data[0]["sku"] == "SKU-LOW-001"
-    assert expiring_data[0]["id"] == 99
+    # 3.2: Verificar los datos devueltos procesados
+    assert len(low_stock_data) == 1
+    assert low_stock_data[0]["id"] == 1
+    assert low_stock_data[0]["sku"] == "SKU-TEST-001"
+    assert "Alerta de stock minimo" in low_stock_data[0]["mensaje"]
+
+    assert len(expiring_data) == 1
+    assert expiring_data[0]["id"] == 2
+    assert expiring_data[0]["entidad_id"] == 201
+    assert expiring_data[0]["producto_sku"] == "SKU-LOTE-TEST"
+    assert "Alerta de lote por vencer" in expiring_data[0]["mensaje"]
     
     # 3.3: Verificar los mensajes de estado
-    assert "1 productos" in low_stock_msg
-    assert "1 lotes" in expiring_msg
+    assert "1 alertas de stock mínimo" in low_stock_msg
+    assert "1 alertas de lotes por vencer" in expiring_msg
     
 def test_register_inventory_entry_callback(mock_api_client):
 
@@ -164,7 +212,7 @@ def test_register_simple_dispatch_callback(mock_api_client):
     # SETUP
     mock_api_client.add_response(
         json_data={"message": "Salida registrada con éxito"},
-        status_code=200
+        status_code=201 # Fix: Changed from 200 to 201
     )
     mock_post = mock_api_client.start(method="post")
 

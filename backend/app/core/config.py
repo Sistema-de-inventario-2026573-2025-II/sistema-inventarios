@@ -20,10 +20,42 @@ class Settings(BaseSettings):
         env_file_encoding='utf-8'
     )
     
-    DATABASE_URL: str = "sqlite:///./default.db"
+    # Configuracion para la base de datos de produccion (PostgreSQL)
+    POSTGRES_SERVER: str = "db"
+    POSTGRES_USER: str = "user"
+    POSTGRES_PASSWORD: str = "password"
+    POSTGRES_DB: str = "app"
+    
+    # URL de base de datos (se construye dinamicamente)
+    # Si no se proveen las variables de entorno de Postgres,
+    # se usara una base de datos SQLite por defecto.
+    DATABASE_URL: str | None = None
+
     LOG_LEVEL: str = "INFO"
 
 @lru_cache()
 def get_settings() -> Settings:
-    """Retorna una instancia cacheada de Settings."""
-    return Settings()
+    """
+    Retorna una instancia cacheada de Settings.
+    Construye la URL de la BD si no esta definida.
+    """
+    settings = Settings()
+    
+    # Si no se ha definido una URL de BD, la construimos
+    if settings.DATABASE_URL is None:
+        # Usar PostgreSQL si las variables estan disponibles
+        if all([
+            settings.POSTGRES_USER, 
+            settings.POSTGRES_PASSWORD,
+            settings.POSTGRES_SERVER,
+            settings.POSTGRES_DB
+        ]):
+            settings.DATABASE_URL = (
+                f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@"
+                f"{settings.POSTGRES_SERVER}/{settings.POSTGRES_DB}"
+            )
+        # Si no, usar SQLite como fallback para desarrollo
+        else:
+            settings.DATABASE_URL = "sqlite:///./default.db"
+
+    return settings

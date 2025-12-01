@@ -1,8 +1,15 @@
 import os
 from functools import lru_cache
 import logging
+import dash_bootstrap_components as dbc # Nueva importacion
 
 logger = logging.getLogger(__name__)
+
+# Definir los temas que usaremos
+THEMES = {
+    "light": dbc.themes.BOOTSTRAP,
+    "dark": dbc.themes.DARKLY,
+}
 
 class FrontendSettings:
     """

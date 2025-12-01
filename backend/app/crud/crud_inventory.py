@@ -12,6 +12,13 @@ from typing import List
 
 logger = logging.getLogger(__name__)
 
+def get_lotes(db: Session, skip: int = 0, limit: int = 100) -> List[Lote]:
+    """
+    Obtiene una lista de lotes.
+    """
+    logger.debug(f"Obteniendo lotes: skip={skip}, limit={limit}")
+    return db.query(Lote).offset(skip).limit(limit).all()
+
 def get_lote(db: Session, lote_id: int) -> Lote | None:
     """
     Obtiene un lote por su ID.
