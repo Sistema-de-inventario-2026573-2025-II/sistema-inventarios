@@ -34,3 +34,43 @@
 - Added `get_alertas_activas_read` in `backend/app/services/alerts.py` to serve as the read model for active alerts.
 - Updated API endpoints in `backend/app/api/endpoints/alerts.py` to use `get_alertas_activas_read` and return `List[AlertaInDB]`.
 - Rewrote relevant tests in `backend/tests/test_services.py` and `backend/tests/api/test_alerts.py` to align with the new CQRS-based alert management.
+
+### Bugfix: API Error 500 on Alerts Dash Tab
+
+- Added `joinedload(LoteModel.producto)` to `check_lotes_por_vencer_and_manage_alerts` in `backend/app/services/alerts.py` to ensure eager loading of related product data, preventing potential `None` errors.
+- Implemented defensive checks for `lote.producto.nombre` and `lote.producto.sku` to handle cases where related product might be missing.
+- Wrapped alert management functions (`check_stock_minimo`, `check_lotes_por_vencer_and_manage_alerts`) with `try-except` blocks in `backend/app/services/alerts.py` for robust error logging without re-raising.
+- Added a `try-except` block to `get_alertas_activas_read` in `backend/app/services/alerts.py` to catch unexpected errors and raise an `HTTPException(500)`.
+- Implemented `try-except` blocks in API endpoints (`get_low_stock_alerts`, `get_expiring_lotes_alert`) in `backend/app/api/endpoints/alerts.py` to catch and re-raise `HTTPException` or raise a generic `HTTPException(500)` for other errors.
+
+### Module 8: Frontend (UI) and Reports (Dash)
+
+#### Task 8.9: Dark Theme Toggle (Frontend)
+
+- Added a `dbc.Switch` component for theme toggling to `frontend/layouts.py` (sidebar).
+- Modified `frontend/app.py` to include `dcc.Store` for theme preference and `html.Link` for dynamic stylesheet loading, along with a `THEMES` dictionary.
+- Implemented `toggle_theme` callback in `frontend/callbacks.py` to switch between light and dark themes using `dcc.Store` and updating the stylesheet link.
+- Corrected import path for `THEMES` in `frontend/callbacks.py` to `from frontend.app import THEMES`.
+
+#### Task 8.10: Lotes Table UI
+
+- Added a `dash_table.DataTable` component for displaying lots to `inventory_layout` in `frontend/layouts.py`.
+- Defined `columnas_lotes` for the lot table columns (ID, Product SKU, Received Quantity, Current Quantity, Expiration Date).
+- Implemented `update_lotes_table` callback in `frontend/callbacks.py` to fetch lot data from the backend API (`/lotes`), process it to include `producto_sku`, and populate the table.
+- Added `dcc.Interval` and `dbc.Button` to `inventory_layout` for auto and manual refresh of the lot table.
+
+#### Task 8.11: UX Improvement: Product dropdown for inventory entry
+
+- Replaced the "Producto ID" `dbc.Input` with a `dcc.Dropdown` (`entry-product-dropdown`) in `frontend/layouts.py`.
+- Added a hidden `dcc.Input` (`entry-product-id`) to store the selected product ID.
+- Implemented `update_product_dropdown_options` callback in `frontend/callbacks.py` to fetch products from `/productos` API and populate the dropdown.
+- Implemented `update_selected_product_id` callback in `frontend/callbacks.py` to update the hidden input with the dropdown's selection.
+- Modified `register_inventory_entry` callback to use the value from the hidden `entry-product-id` input.
+
+#### Task 8.12: UX Improvement: Smart dispatch (FEFO) from UI
+
+- Replaced the "Producto ID" `dbc.Input` with a `dcc.Dropdown` (`dispatch-fefo-product-dropdown`) in `frontend/layouts.py` for the FEFO dispatch section.
+- Added a hidden `dcc.Input` (`dispatch-fefo-product-id`) to store the selected product ID for FEFO dispatch.
+- Implemented `update_fefo_product_dropdown_options` callback in `frontend/callbacks.py` to fetch products from `/productos` API and populate the FEFO dispatch dropdown.
+- Implemented `update_fefo_selected_product_id` callback in `frontend/callbacks.py` to update the hidden input with the dropdown's selection for FEFO dispatch.
+- Modified `register_fefo_dispatch` callback to use the value from the hidden `dispatch-fefo-product-id` input.

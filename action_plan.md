@@ -72,10 +72,10 @@
 
 [X] Task 8.8: Inventory Management UI (Forms for Entries and Dispatches).
 
-[ ] Task 8.9: Dark Theme Toggle (Frontend).
-[ ] Task 8.10: Lotes Table UI.
-[ ] Task 8.11: UX Improvement: Product dropdown for inventory entry.
-[ ] Task 8.12: UX Improvement: Smart dispatch (FEFO) from UI.
+[X] Task 8.9: Dark Theme Toggle (Frontend).
+[X] Task 8.10: Lotes Table UI.
+[X] Task 8.11: UX Improvement: Product dropdown for inventory entry.
+[X] Task 8.12: UX Improvement: Smart dispatch (FEFO) from UI.
 
 # Module 9: Production Deployment - [PENDING]
 

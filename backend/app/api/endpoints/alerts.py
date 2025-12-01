@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -24,8 +24,14 @@ def get_low_stock_alerts(
     por debajo de su stock minimo.
     """
     logger.info("Procesando peticion de alerta de stock minimo...")
-    alertas = alerts_service.get_alertas_activas_read(db=db, tipo_alerta="stock_minimo")
-    return alertas
+    try:
+        alertas = alerts_service.get_alertas_activas_read(db=db, tipo_alerta="stock_minimo")
+        return alertas
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Error inesperado al obtener alertas de stock minimo: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error interno del servidor al obtener alertas de stock mínimo.")
 
 
 @router.get(
@@ -49,5 +55,11 @@ def get_expiring_lotes_alert(
         f"Procesando peticion de alerta de lotes por vencer "
         f"(umbral: {days} dias)..."
     )
-    alertas = alerts_service.get_alertas_activas_read(db=db, tipo_alerta=f"por_vencer_{days}", days_threshold=days)
-    return alertas
+    try:
+        alertas = alerts_service.get_alertas_activas_read(db=db, tipo_alerta=f"por_vencer_{days}", days_threshold=days)
+        return alertas
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Error inesperado al obtener alertas de lotes por vencer: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error interno del servidor al obtener alertas de lotes por vencer.")

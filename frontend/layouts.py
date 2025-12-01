@@ -56,11 +56,23 @@ sidebar_layout = html.Div(
         html.P(
             "Un sistema de gestión TDD", className="lead"
         ),
+        html.Div(
+            [
+                dbc.Label("Modo Oscuro", html_for="theme-toggle-switch"),
+                dbc.Switch(
+                    id="theme-toggle-switch",
+                    value=False,  # Por defecto: tema claro
+                    className="ms-2",
+                ),
+            ],
+            className="d-flex align-items-center mb-3"
+        ),
         dbc.Nav(
             [
                 dbc.NavLink("Alertas", href="/", active="exact"),
                 dbc.NavLink("Productos", href="/productos", active="exact"),
                 dbc.NavLink("Inventario", href="/inventario", active="exact"),
+                dbc.NavLink("Reportes", href="/reportes", active="exact"), # Nuevo enlace
             ],
             vertical=True,
             pills=True,
@@ -152,6 +164,25 @@ alerts_layout = dbc.Container([
     ])
 ], fluid=True, className="p-3")
 
+# Definir columnas para nuestra tabla de lotes
+columnas_lotes = [
+    {"name": "ID", "id": "id"},
+    {"name": "Producto SKU", "id": "producto_sku"},
+    {"name": "Cantidad Recibida", "id": "cantidad_recibida"},
+    {"name": "Cantidad Actual", "id": "cantidad_actual"},
+    {"name": "Fecha Vencimiento", "id": "fecha_vencimiento"},
+]
+
+# Definir columnas para el reporte de inventario basico
+columnas_reporte_inventario_basico = [
+    {"name": "ID", "id": "id"},
+    {"name": "Nombre", "id": "nombre"},
+    {"name": "SKU", "id": "sku"},
+    {"name": "Precio", "id": "precio"},
+    {"name": "Stock Actual", "id": "cantidad_actual"},
+    {"name": "Stock Mínimo", "id": "stock_minimo"},
+]
+
 inventory_layout = dbc.Container([
     html.H2("Gestión de Inventario"),
     html.Hr(),
@@ -162,9 +193,15 @@ inventory_layout = dbc.Container([
             html.H4("Registrar Entrada de Lote"),
             dbc.Form([
                 dbc.Row([
-                    dbc.Label("Producto ID", width=2),
-                    dbc.Col(dbc.Input(type="number", id="entry-product-id", placeholder="ID del producto"), width=10),
+                    dbc.Label("Producto", width=2),
+                    dbc.Col(dcc.Dropdown(
+                        id="entry-product-dropdown",
+                        options=[], # Options will be populated by callback
+                        placeholder="Seleccione un producto",
+                    ), width=10),
                 ], className="mb-3"),
+                # Campo oculto para almacenar el product_id real
+                dcc.Input(id="entry-product-id", type="hidden", value=None),
                 dbc.Row([
                     dbc.Label("Cantidad", width=2),
                     dbc.Col(dbc.Input(type="number", id="entry-quantity", placeholder="Cantidad a ingresar"), width=10),
@@ -203,9 +240,15 @@ inventory_layout = dbc.Container([
             html.H4("Registrar Salida FEFO (Automático)"),
             dbc.Form([
                 dbc.Row([
-                    dbc.Label("Producto ID", width=2),
-                    dbc.Col(dbc.Input(type="number", id="dispatch-fefo-product-id", placeholder="ID del producto a despachar"), width=10),
+                    dbc.Label("Producto", width=2),
+                    dbc.Col(dcc.Dropdown(
+                        id="dispatch-fefo-product-dropdown",
+                        options=[], # Options will be populated by callback
+                        placeholder="Seleccione un producto",
+                    ), width=10),
                 ], className="mb-3"),
+                # Campo oculto para almacenar el product_id real
+                dcc.Input(id="dispatch-fefo-product-id", type="hidden", value=None),
                 dbc.Row([
                     dbc.Label("Cantidad", width=2),
                     dbc.Col(dbc.Input(type="number", id="dispatch-fefo-quantity", placeholder="Cantidad a despachar"), width=10),
@@ -215,4 +258,34 @@ inventory_layout = dbc.Container([
             dbc.Alert("...", id="dispatch-fefo-result-status", color="info", className="mt-3"),
         ], width=6),
     ]),
+
+    html.Hr(className="my-5"), # Separador
+
+    # Sección para Mostrar Lotes Existentes
+    dbc.Row([
+        dbc.Col([
+            html.H3("Lotes Existentes"),
+            dcc.Interval(id="lotes-interval", interval=60*1000, n_intervals=0), # Auto-refresh
+            dbc.Button(
+                "Refrescar Lotes",
+                id="refresh-lotes-button", # Boton de refresco manual
+                color="info",
+                className="mb-3"
+            ),
+            dbc.Alert("Cargando lotes...", color="info", id="lotes-table-status"),
+            dash_table.DataTable(
+                id="lotes-table",
+                columns=columnas_lotes,
+                data=[],
+                page_size=10,
+                style_table={'overflowX': 'auto'},
+                style_cell={'textAlign': 'left'},
+                style_header={
+                    'backgroundColor': 'rgb(230, 230, 230)',
+                    'fontWeight': 'bold'
+                },
+            )
+        ])
+    ])
+
 ], fluid=True, className="p-3")
