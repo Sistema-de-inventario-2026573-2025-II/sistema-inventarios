@@ -3,6 +3,7 @@ import logging
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select, and_
 from typing import List
+import pandas as pd
 from datetime import date, timedelta
 
 from app.models.producto import Producto as ProductoModel
@@ -13,6 +14,20 @@ from app.schemas.lote import Lote as LoteSchema
 from app.schemas.movimiento import Movimiento as MovimientoSchema # Nueva importacion
 
 logger = logging.getLogger(__name__)
+
+def get_top_available_products(db: Session, *, top_n: int = 5) -> pd.DataFrame:
+    """
+    Servicio que devuelve los N productos con mayor cantidad_actual.
+    """
+    logger.info(f"Obteniendo los {top_n} productos con mayor disponibilidad...")
+    productos_orm = db.scalars(
+        select(ProductoModel)
+        .order_by(ProductoModel.cantidad_actual.desc(), ProductoModel.nombre.asc())
+        .limit(top_n)
+    )
+    productos_schemas = [ProductoSchema.model_validate(p) for p in productos_orm]
+    logger.info(f"Reporte de top {top_n} productos disponibles generado para {len(productos_schemas)} productos.")
+    return productos_schemas
 
 def get_current_stock_per_product(db: Session) -> List[ProductoSchema]:
     """

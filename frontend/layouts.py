@@ -320,27 +320,22 @@ reports_layout = dbc.Container([
     # Reporte Básico de Inventario
     dbc.Row([
         dbc.Col([
-            html.H4("Reporte Básico de Inventario (Stock Actual por Producto)"),
-            dcc.Interval(id="basic-inventory-interval", interval=60*1000, n_intervals=0), # Auto-refresh
+            html.H4("Top Productos con Mayor Disponibilidad"),
+            dcc.Interval(id="top-inventory-interval", interval=60*1000, n_intervals=0), # Auto-refresh
+            dbc.Input(type="number",
+                    id="top-n-products-input",
+                    value=5, # Default value
+                    min=1, max=100, step=1, # Constraints for the number input
+                    className="me-2", # Add some margin to the right
+            ), # Close the dbc.Input component
             dbc.Button(
                 "Refrescar Reporte de Inventario",
-                id="refresh-basic-inventory-button", # Boton de refresco manual
+                id="refresh-top-inventory-button", # Boton de refresco manual
                 color="primary",
                 className="mb-3"
             ),
-            dbc.Alert("Cargando reporte de inventario...", color="info", id="basic-inventory-status"),
-            dash_table.DataTable(
-                id="basic-inventory-table",
-                columns=columnas_reporte_inventario_basico,
-                data=[],
-                page_size=10,
-                style_table={'overflowX': 'auto'},
-                style_cell={'textAlign': 'left'},
-                style_header={
-                    'backgroundColor': 'rgb(230, 230, 230)',
-                    'fontWeight': 'bold'
-                },
-            )
+            dbc.Alert("Cargando reporte de inventario...", color="info", id="top-inventory-status"),
+            dcc.Graph(id="top-inventory-chart")
         ])
     ], className="mb-5"),
 
