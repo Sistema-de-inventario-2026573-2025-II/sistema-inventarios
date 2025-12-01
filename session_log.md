@@ -114,3 +114,11 @@
     - Integrated database initialization (`init_db.py`) into the `backend` service's `command` using `bash -c "/opt/venv/bin/python /app/backend/app/db/init_db.py && ..."`, ensuring it runs before Gunicorn starts.
     - Added a `healthcheck` to the `backend` service to ensure it's healthy before the `frontend` starts.
 
+### Task 9.4: Deployment Configuration (Render + Supabase)
+
+- Created `render.yaml` to define Backend and Frontend services for Render's Blueprint system.
+- Updated `backend/gunicorn.conf.py` to respect the `PORT` environment variable provided by Render.
+- Updated `frontend/app.py` to bind to `0.0.0.0` and use the `PORT` environment variable.
+- Enhanced `frontend/ui_config.py` to automatically append `/api/v1` to `API_BASE_URL` if missing (fixing `fromService` injection).
+- Created `DEPLOY.md` with step-by-step instructions for setting up Supabase (DB) and Render.
+

@@ -85,6 +85,8 @@
 
 [X] Task 9.3: Migration/Initialization script for Prod.
 
+[X] Task 9.4: Deployment Configuration (Render + Supabase).
+
 # Module 10: Optimization and Caching - [PENDING]
 
 [X] Task 10.1: Implement Caching for alerts (invalidation by events).
