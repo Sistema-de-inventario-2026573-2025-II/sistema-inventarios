@@ -74,3 +74,43 @@
 - Implemented `update_fefo_product_dropdown_options` callback in `frontend/callbacks.py` to fetch products from `/productos` API and populate the FEFO dispatch dropdown.
 - Implemented `update_fefo_selected_product_id` callback in `frontend/callbacks.py` to update the hidden input with the dropdown's selection for FEFO dispatch.
 - Modified `register_fefo_dispatch` callback to use the value from the hidden `dispatch-fefo-product-id` input.
+
+## Module 11: Reporting
+
+### Task 11.1: Basic Inventory Report (current stock per product)
+
+- Created `backend/app/api/endpoints/reports.py` with an endpoint `/api/v1/reportes/inventario-basico` to serve the report data.
+- Integrated `reports.router` into the main API router in `backend/app/api/api.py`.
+- Created `backend/app/services/reports.py` with `get_current_stock_per_product` service function to fetch product stock data.
+- Added a new navigation link "Reportes" to the `sidebar_layout` in `frontend/layouts.py`.
+- Defined `columnas_reporte_inventario_basico` and `reports_layout` in `frontend/layouts.py` to display the report table.
+- Implemented `update_basic_inventory_report_table` callback in `frontend/callbacks.py` to fetch report data and populate the table.
+
+### Task 11.2: Expiration Report (lotes nearing expiration)
+
+- Added a new API endpoint `/api/v1/reportes/lotes-por-vencer` to `backend/app/api/endpoints/reports.py` to serve the expiration report data.
+- Corrected the `response_model` and type hint for `get_expiring_lotes_report` in `backend/app/api/endpoints/reports.py` to use `app.schemas.lote.Lote`.
+- Implemented `get_expiring_lotes_report` service function in `backend/app/services/reports.py` to fetch expiring lot data, including product information.
+- Defined `columnas_reporte_lotes_por_vencer` in `frontend/layouts.py` and added a `dash_table.DataTable` to `reports_layout` to display the expiration report.
+- Implemented `update_expiring_lotes_report_table` callback in `frontend/callbacks.py` to fetch expiration report data and populate the table.
+
+### Task 11.3: Movement Report (ins and outs in a date range)
+
+- Added a new API endpoint `/api/v1/reportes/movimientos-por-rango-fecha` to `backend/app/api/endpoints/reports.py` to serve the movement report data.
+- Added missing imports for `date` and `movimiento_schema` in `backend/app/api/endpoints/reports.py`.
+- Implemented `get_movement_report_by_date_range` service function in `backend/app/services/reports.py` to fetch movement data within a specified date range, including product and lot information.
+- Defined `columnas_reporte_movimientos` in `frontend/layouts.py` and added a `dash_table.DataTable` to `reports_layout` to display the movement report, along with date range pickers.
+- Implemented `update_movement_report_table` callback in `frontend/callbacks.py` to fetch movement report data and populate the table.
+
+## Module 9: Production Deployment (Revisited)
+
+- **Dockerfile Improvements:**
+    - Refactored dependency management to use a virtual environment (`/opt/venv`) within the builder stage and copied it to the final stage for better isolation and portability.
+    - Modified `Dockerfile` to copy `gunicorn.conf.py` into the `backend` directory (`/app/backend/gunicorn.conf.py`) for better organization.
+    - Added copying of `frontend` application code (`COPY ./frontend /app/frontend`).
+    - Updated `CMD` to reference `gunicorn.conf.py` from its new location (`backend/gunicorn.conf.py`).
+- **docker-compose.yml Improvements:**
+    - Added a `frontend` service that builds from the same `Dockerfile`, exposes port `8050`, and runs `frontend/app.py`. It depends on the `backend` service and sets `API_BASE_URL` to point to the backend service within the Docker network.
+    - Integrated database initialization (`init_db.py`) into the `backend` service's `command` using `bash -c "/opt/venv/bin/python /app/backend/app/db/init_db.py && ..."`, ensuring it runs before Gunicorn starts.
+    - Added a `healthcheck` to the `backend` service to ensure it's healthy before the `frontend` starts.
+

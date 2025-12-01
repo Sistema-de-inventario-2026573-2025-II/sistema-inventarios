@@ -77,7 +77,7 @@
 [X] Task 8.11: UX Improvement: Product dropdown for inventory entry.
 [X] Task 8.12: UX Improvement: Smart dispatch (FEFO) from UI.
 
-# Module 9: Production Deployment - [PENDING]
+# Module 9: Production Deployment - [COMPLETED] (Revisited and Improved)
 
 [X] Task 9.1: Gunicorn configuration.
 
@@ -93,6 +93,6 @@
 
 # Module 11: Reporting - [PENDING]
 
-[ ] Task 11.1: Basic Inventory Report (current stock per product).
-[ ] Task 11.2: Expiration Report (lotes nearing expiration).
-[ ] Task 11.3: Movement Report (ins and outs in a date range).
+[X] Task 11.1: Basic Inventory Report (current stock per product).
+[X] Task 11.2: Expiration Report (lotes nearing expiration).
+[X] Task 11.3: Movement Report (ins and outs in a date range).

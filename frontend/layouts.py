@@ -47,7 +47,7 @@ products_layout = dbc.Container([
             )
         ])
     ])
-], fluid=True, className="p-3")
+], fluid=True, className="p-3", id="products-layout-container") # Agregado id
 
 sidebar_layout = html.Div(
     [
@@ -162,7 +162,7 @@ alerts_layout = dbc.Container([
             )
         ])
     ])
-], fluid=True, className="p-3")
+], fluid=True, className="p-3", id="alerts-layout-container") # Agregado id
 
 # Definir columnas para nuestra tabla de lotes
 columnas_lotes = [
@@ -183,7 +183,27 @@ columnas_reporte_inventario_basico = [
     {"name": "Stock Mínimo", "id": "stock_minimo"},
 ]
 
+# Definir columnas para el reporte de lotes por vencer
+columnas_reporte_lotes_por_vencer = [
+    {"name": "ID Lote", "id": "id"},
+    {"name": "Producto Nombre", "id": "producto_nombre"},
+    {"name": "Producto SKU", "id": "producto_sku"},
+    {"name": "Cantidad Actual", "id": "cantidad_actual"},
+    {"name": "Fecha Vencimiento", "id": "fecha_vencimiento"},
+]
+
+# Definir columnas para el reporte de movimientos
+columnas_reporte_movimientos = [
+    {"name": "ID Movimiento", "id": "id"},
+    {"name": "Tipo", "id": "tipo_movimiento"},
+    {"name": "Producto SKU", "id": "producto_sku"},
+    {"name": "Lote ID", "id": "lote_id"},
+    {"name": "Cantidad", "id": "cantidad"},
+    {"name": "Fecha Movimiento", "id": "fecha_movimiento"},
+]
+
 inventory_layout = dbc.Container([
+    dcc.Interval(id="products-dd-interval", interval=60*1000, n_intervals=0),
     html.H2("Gestión de Inventario"),
     html.Hr(),
 
@@ -288,4 +308,109 @@ inventory_layout = dbc.Container([
         ])
     ])
 
-], fluid=True, className="p-3")
+], fluid=True, className="p-3", id="inventory-layout-container") # Agregado id
+
+reports_layout = dbc.Container([
+    # Trigger para el callback (se dispara al cargar la pagina)
+    dcc.Location(id="reports-url-trigger", refresh=True),
+    
+    dbc.Row(html.H2("Reportes")),
+    html.Hr(),
+
+    # Reporte Básico de Inventario
+    dbc.Row([
+        dbc.Col([
+            html.H4("Reporte Básico de Inventario (Stock Actual por Producto)"),
+            dcc.Interval(id="basic-inventory-interval", interval=60*1000, n_intervals=0), # Auto-refresh
+            dbc.Button(
+                "Refrescar Reporte de Inventario",
+                id="refresh-basic-inventory-button", # Boton de refresco manual
+                color="primary",
+                className="mb-3"
+            ),
+            dbc.Alert("Cargando reporte de inventario...", color="info", id="basic-inventory-status"),
+            dash_table.DataTable(
+                id="basic-inventory-table",
+                columns=columnas_reporte_inventario_basico,
+                data=[],
+                page_size=10,
+                style_table={'overflowX': 'auto'},
+                style_cell={'textAlign': 'left'},
+                style_header={
+                    'backgroundColor': 'rgb(230, 230, 230)',
+                    'fontWeight': 'bold'
+                },
+            )
+        ])
+    ], className="mb-5"),
+
+    # Reporte de Lotes Próximos a Vencer
+    dbc.Row([
+        dbc.Col([
+            html.H4("Reporte de Lotes Próximos a Vencer"),
+            dcc.Interval(id="expiring-lotes-report-interval", interval=60*1000, n_intervals=0), # Auto-refresh
+            dbc.Button(
+                "Refrescar Lotes por Vencer",
+                id="refresh-expiring-lotes-button", # Boton de refresco manual
+                color="warning",
+                className="mb-3"
+            ),
+            dbc.Alert("Cargando reporte de lotes por vencer...", color="info", id="expiring-lotes-report-status"),
+            dash_table.DataTable(
+                id="expiring-lotes-report-table",
+                columns=columnas_reporte_lotes_por_vencer,
+                data=[],
+                page_size=10,
+                style_table={'overflowX': 'auto'},
+                style_cell={'textAlign': 'left'},
+                style_header={
+                    'backgroundColor': 'rgb(230, 230, 230)',
+                    'fontWeight': 'bold'
+                },
+            )
+        ])
+    ], className="mb-5"),
+
+    # Reporte de Movimientos
+    dbc.Row([
+        dbc.Col([
+            html.H4("Reporte de Movimientos por Rango de Fecha"),
+            dbc.Form([
+                dbc.Row([
+                    dbc.Label("Fecha Inicio", width=2),
+                    dbc.Col(dcc.DatePickerSingle(
+                        id="movement-report-start-date",
+                        placeholder="YYYY-MM-DD",
+                        display_format="YYYY-MM-DD"
+                    ), width=4),
+                    dbc.Label("Fecha Fin", width=2),
+                    dbc.Col(dcc.DatePickerSingle(
+                        id="movement-report-end-date",
+                        placeholder="YYYY-MM-DD",
+                        display_format="YYYY-MM-DD"
+                    ), width=4),
+                ], className="mb-3"),
+                dbc.Button(
+                    "Generar Reporte de Movimientos",
+                    id="generate-movement-report-button",
+                    color="primary",
+                    className="mb-3"
+                ),
+            ]),
+            dbc.Alert("Ingrese un rango de fechas y genere el reporte...", color="info", id="movement-report-status"),
+            dash_table.DataTable(
+                id="movement-report-table",
+                columns=columnas_reporte_movimientos,
+                data=[],
+                page_size=10,
+                style_table={'overflowX': 'auto'},
+                style_cell={'textAlign': 'left'},
+                style_header={
+                    'backgroundColor': 'rgb(230, 230, 230)',
+                    'fontWeight': 'bold'
+                },
+            )
+        ])
+    ], className="mb-5"),
+
+], fluid=True, className="p-3", id="reports-layout-container") # Agregado id

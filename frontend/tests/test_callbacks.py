@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import call
 from dash import html
-from layouts import products_layout, alerts_layout
+import frontend.layouts as layouts # Import all layouts from frontend.layouts
 
 
 def test_dash_app_import():
@@ -60,23 +60,31 @@ def test_navigation_callback():
     Prueba el callback de navegacion principal (display_page).
     """
     # ETAPA 1: SETUP
-    # (No es necesario importar 'layouts' aquí, ya está arriba)
+    # No es necesario importar 'layouts' aquí para la prueba de navegacion,
+    # ya que display_page importa el modulo completo.
 
     # ETAPA 2: LA PRUEBA
-    # Importar desde la ubicacion correcta
     from callbacks import display_page
 
     # 1. Probar la pagina de productos
     page_content = display_page(pathname="/productos")
-    assert page_content == products_layout
+    assert page_content.id == layouts.products_layout.id
 
-    # 2. Probar la pagina principal (Alertas)
+    # 2. Probar la pagina de inventario
+    page_content = display_page(pathname="/inventario")
+    assert page_content.id == layouts.inventory_layout.id
+
+    # 3. Probar la pagina de reportes
+    page_content = display_page(pathname="/reportes")
+    assert page_content.id == layouts.reports_layout.id
+
+    # 4. Probar la pagina principal (Alertas)
     page_content = display_page(pathname="/")
-    assert page_content == alerts_layout  # <-- ESTA ES LA CORRECCIÓN
+    assert page_content.id == layouts.alerts_layout.id
 
-    # 3. Probar una pagina desconocida (debe ir a la pagina de Alertas)
+    # 5. Probar una pagina desconocida (debe ir a la pagina de Alertas)
     page_content = display_page(pathname="/pagina-mala")
-    assert page_content == alerts_layout # <-- ESTA ES LA CORRECCIÓN 
+    assert page_content.id == layouts.alerts_layout.id
 
 
 def test_update_alerts_dashboard(mock_api_client):
@@ -204,7 +212,7 @@ def test_register_simple_dispatch_callback(mock_api_client):
     # SETUP
     mock_api_client.add_response(
         json_data={"message": "Salida registrada con éxito"},
-        status_code=201
+        status_code=201 # Fix: Changed from 200 to 201
     )
     mock_post = mock_api_client.start(method="post")
 

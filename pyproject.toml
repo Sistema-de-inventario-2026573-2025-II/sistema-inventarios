@@ -19,6 +19,8 @@ dependencies = [
     "dash-table>=5.0.0",
     "gunicorn",
     "httpx>=0.28.1",
+    "pandas>=2.3.3",
+    "plotly>=6.5.0",
 ]
 
 [project.optional-dependencies]

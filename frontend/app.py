@@ -6,14 +6,9 @@ from dashboard import app
 from dash import html, dcc
 import dash_bootstrap_components as dbc # Nueva importacion
 from layouts import sidebar_layout, content_layout # Re-agregar importaciones
+from ui_config import THEMES # Importar THEMES desde ui_config
 
 logger = logging.getLogger(__name__)
-
-# Definir los temas que usaremos
-THEMES = {
-    "light": dbc.themes.BOOTSTRAP,
-    "dark": dbc.themes.DARKLY,
-}
 
 # Este es el layout principal de nuestra App
 app.layout = html.Div([
