@@ -1,45 +1,42 @@
-# Stage 1: Builder - Installs dependencies
-FROM python:3.10-slim-buster AS builder
+# Stage 1: Builder
+FROM python:3.10-slim-bookworm AS builder
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-ENV VIRTUAL_ENV=/opt/venv
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
-# Install uv and create virtual environment
-RUN pip install uv && uv venv "$VIRTUAL_ENV"
-
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Copy dependency definition files
+# Environment variables for uv
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+
+# Copy dependency files first (better layer caching)
 COPY pyproject.toml uv.lock ./
 
-# Install dependencies into the virtual environment using uv
-RUN uv pip install --system --no-cache-dir --requirement pyproject.toml
+# Install dependencies into .venv
+# --frozen: Sync strictly from uv.lock
+# --no-install-project: We only want dependencies, not the app itself yet
+RUN uv sync --frozen --no-install-project
 
-# Stage 2: Final - Runs the application
-FROM python:3.10-slim-buster
+# Stage 2: Final
+FROM python:3.10-slim-bookworm
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Copy the virtual environment from the builder stage
-COPY --from=builder /opt/venv /opt/venv
+# Copy virtual environment from builder
+COPY --from=builder /app/.venv /app/.venv
 
-# Activate the virtual environment
-ENV VIRTUAL_ENV=/opt/venv
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+# Add virtual environment to PATH
+ENV PATH="/app/.venv/bin:$PATH"
 
-# Copy the backend application code
+# Copy application code
 COPY ./backend /app/backend
-
-# Copy the gunicorn configuration into the backend directory
-COPY ./backend/gunicorn.conf.py /app/backend/gunicorn.conf.py
-
-# Copy the frontend application code
 COPY ./frontend /app/frontend
 
-# Command to run the application using Gunicorn
-CMD ["gunicorn", "-c", "backend/gunicorn.conf.py", "backend.main:app"]
+# Ensure start script is executable
+RUN chmod +x /app/backend/start.sh
+
+# Command to run the application
+CMD ["/app/backend/start.sh"]

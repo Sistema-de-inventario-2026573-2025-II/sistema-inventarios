@@ -44,7 +44,7 @@ services:
     dockerfilePath: Dockerfile
 
     # Start Command
-    dockerCommand: /opt/venv/bin/python /app/frontend/app.py
+    dockerCommand: /app/.venv/bin/python /app/frontend/app.py
 
     envVars:
       - key: API_BASE_URL
