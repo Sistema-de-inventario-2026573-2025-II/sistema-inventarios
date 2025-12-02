@@ -13,8 +13,8 @@ services:
     dockerfilePath: Dockerfile
 
     # Start Command
-    # Runs migration script first, then starts Gunicorn
-    dockerCommand: bash -c "/opt/venv/bin/python /app/backend/app/db/init_db.py && /opt/venv/bin/gunicorn -c /app/backend/gunicorn.conf.py backend.main:app"
+    # Runs migration script first, then starts Gunicorn using the helper script
+    dockerCommand: bash /app/backend/start.sh
 
     # Environment Variables
     envVars:
