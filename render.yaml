@@ -51,7 +51,7 @@ services:
         fromService:
           type: web
           name: sistema-inventarios-backend
-          property: url
+          property: host
         # This magic 'fromService' automatically injects the backend URL!
         # It will look like: https://sistema-inventarios-backend.onrender.com
         # We need to append /api/v1/ in the code or here? 

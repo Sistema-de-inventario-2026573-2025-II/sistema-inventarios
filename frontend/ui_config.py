@@ -16,9 +16,13 @@ class FrontendSettings:
     Gestiona la configuracion del frontend, leyendo de variables de entorno.
     """
     def __init__(self):
-        # Obtener URL base. Render inyecta solo el dominio (ej: https://app.onrender.com)
+        # Obtener URL base. Render inyecta solo el dominio (ej: app.onrender.com) usando la propiedad 'host'
         base = os.getenv("API_BASE_URL", "http://127.0.0.1:8000/api/v1")
         
+        # Si Render nos da solo el host (ej: mi-app.onrender.com), agregamos https://
+        if not base.startswith("http"):
+            base = f"https://{base}"
+
         # Asegurar que termine en /api/v1 para que los endpoints funcionen
         if not base.endswith("/api/v1"):
             # Eliminar trailing slash si existe antes de agregar el sufijo
