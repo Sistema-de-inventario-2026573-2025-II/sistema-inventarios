@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Add backend directory to PYTHONPATH so imports like 'from app.main' work
+export PYTHONPATH=$PYTHONPATH:/app/backend
+
 # Run database migrations/initialization
 echo "Running database initialization..."
 /app/.venv/bin/python /app/backend/app/db/init_db.py
