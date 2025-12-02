@@ -51,22 +51,24 @@ products_layout = dbc.Container([
 
 sidebar_layout = html.Div(
     [
-        html.H2("Inventarios", className="display-4"),
+        html.H2("Inventarios", className="text-primary-centered", style={"width": "80%"}),
         html.Hr(),
         html.P(
             "Un sistema de gestión TDD", className="lead"
         ),
-        html.Div(
-            [
-                dbc.Label("Modo Oscuro", html_for="theme-toggle-switch"),
-                dbc.Switch(
-                    id="theme-toggle-switch",
-                    value=False,  # Por defecto: tema claro
-                    className="ms-2",
-                ),
-            ],
-            className="d-flex align-items-center mb-3"
-        ),
+        # html.Div(
+        #     [
+        #         dbc.Label("Modo Oscuro", html_for="theme-toggle-switch", hidden='hidden'),
+        #         dbc.Switch(
+        #             id="theme-toggle-switch",
+        #             value=False,  # Por defecto: tema claro
+        #             className="ms-2",
+        #             hidden='hidden'  # Ocultar el switch por ahora
+        #         ),
+        #     ],
+        #     className="d-flex align-items-center mb-3",
+        #     hidden='hidden',  # Ocultar el switch por ahora
+        # ),
         dbc.Nav(
             [
                 dbc.NavLink("Alertas", href="/", active="exact"),
@@ -167,7 +169,6 @@ alerts_layout = dbc.Container([
 # Definir columnas para nuestra tabla de lotes
 columnas_lotes = [
     {"name": "ID", "id": "id"},
-    {"name": "Producto SKU", "id": "producto_sku"},
     {"name": "Cantidad Recibida", "id": "cantidad_recibida"},
     {"name": "Cantidad Actual", "id": "cantidad_actual"},
     {"name": "Fecha Vencimiento", "id": "fecha_vencimiento"},
@@ -340,72 +341,72 @@ reports_layout = dbc.Container([
     ], className="mb-5"),
 
     # Reporte de Lotes Próximos a Vencer
-    dbc.Row([
-        dbc.Col([
-            html.H4("Reporte de Lotes Próximos a Vencer"),
-            dcc.Interval(id="expiring-lotes-report-interval", interval=60*1000, n_intervals=0), # Auto-refresh
-            dbc.Button(
-                "Refrescar Lotes por Vencer",
-                id="refresh-expiring-lotes-button", # Boton de refresco manual
-                color="warning",
-                className="mb-3"
-            ),
-            dbc.Alert("Cargando reporte de lotes por vencer...", color="info", id="expiring-lotes-report-status"),
-            dash_table.DataTable(
-                id="expiring-lotes-report-table",
-                columns=columnas_reporte_lotes_por_vencer,
-                data=[],
-                page_size=10,
-                style_table={'overflowX': 'auto'},
-                style_cell={'textAlign': 'left'},
-                style_header={
-                    'backgroundColor': 'rgb(230, 230, 230)',
-                    'fontWeight': 'bold'
-                },
-            )
-        ])
-    ], className="mb-5"),
+    # dbc.Row([
+    #     dbc.Col([
+    #         html.H4("Reporte de Lotes Próximos a Vencer"),
+    #         dcc.Interval(id="expiring-lotes-report-interval", interval=60*1000, n_intervals=0), # Auto-refresh
+    #         dbc.Button(
+    #             "Refrescar Lotes por Vencer",
+    #             id="refresh-expiring-lotes-button", # Boton de refresco manual
+    #             color="warning",
+    #             className="mb-3"
+    #         ),
+    #         dbc.Alert("Cargando reporte de lotes por vencer...", color="info", id="expiring-lotes-report-status"),
+    #         dash_table.DataTable(
+    #             id="expiring-lotes-report-table",
+    #             columns=columnas_reporte_lotes_por_vencer,
+    #             data=[],
+    #             page_size=10,
+    #             style_table={'overflowX': 'auto'},
+    #             style_cell={'textAlign': 'left'},
+    #             style_header={
+    #                 'backgroundColor': 'rgb(230, 230, 230)',
+    #                 'fontWeight': 'bold'
+    #             },
+    #         )
+    #     ])
+    # ], className="mb-5"),
 
-    # Reporte de Movimientos
-    dbc.Row([
-        dbc.Col([
-            html.H4("Reporte de Movimientos por Rango de Fecha"),
-            dbc.Form([
-                dbc.Row([
-                    dbc.Label("Fecha Inicio", width=2),
-                    dbc.Col(dcc.DatePickerSingle(
-                        id="movement-report-start-date",
-                        placeholder="YYYY-MM-DD",
-                        display_format="YYYY-MM-DD"
-                    ), width=4),
-                    dbc.Label("Fecha Fin", width=2),
-                    dbc.Col(dcc.DatePickerSingle(
-                        id="movement-report-end-date",
-                        placeholder="YYYY-MM-DD",
-                        display_format="YYYY-MM-DD"
-                    ), width=4),
-                ], className="mb-3"),
-                dbc.Button(
-                    "Generar Reporte de Movimientos",
-                    id="generate-movement-report-button",
-                    color="primary",
-                    className="mb-3"
-                ),
-            ]),
-            dbc.Alert("Ingrese un rango de fechas y genere el reporte...", color="info", id="movement-report-status"),
-            dash_table.DataTable(
-                id="movement-report-table",
-                columns=columnas_reporte_movimientos,
-                data=[],
-                page_size=10,
-                style_table={'overflowX': 'auto'},
-                style_cell={'textAlign': 'left'},
-                style_header={
-                    'backgroundColor': 'rgb(230, 230, 230)',
-                    'fontWeight': 'bold'
-                },
-            )
-        ])
-    ], className="mb-5"),
+    # # Reporte de Movimientos
+    # dbc.Row([
+    #     dbc.Col([
+    #         html.H4("Reporte de Movimientos por Rango de Fecha"),
+    #         dbc.Form([
+    #             dbc.Row([
+    #                 dbc.Label("Fecha Inicio", width=2),
+    #                 dbc.Col(dcc.DatePickerSingle(
+    #                     id="movement-report-start-date",
+    #                     placeholder="YYYY-MM-DD",
+    #                     display_format="YYYY-MM-DD"
+    #                 ), width=4),
+    #                 dbc.Label("Fecha Fin", width=2),
+    #                 dbc.Col(dcc.DatePickerSingle(
+    #                     id="movement-report-end-date",
+    #                     placeholder="YYYY-MM-DD",
+    #                     display_format="YYYY-MM-DD"
+    #                 ), width=4),
+    #             ], className="mb-3"),
+    #             dbc.Button(
+    #                 "Generar Reporte de Movimientos",
+    #                 id="generate-movement-report-button",
+    #                 color="primary",
+    #                 className="mb-3"
+    #             ),
+    #         ]),
+    #         dbc.Alert("Ingrese un rango de fechas y genere el reporte...", color="info", id="movement-report-status"),
+    #         dash_table.DataTable(
+    #             id="movement-report-table",
+    #             columns=columnas_reporte_movimientos,
+    #             data=[],
+    #             page_size=10,
+    #             style_table={'overflowX': 'auto'},
+    #             style_cell={'textAlign': 'left'},
+    #             style_header={
+    #                 'backgroundColor': 'rgb(230, 230, 230)',
+    #                 'fontWeight': 'bold'
+    #             },
+    #         )
+    #     ])
+    # ], className="mb-5"),
 
 ], fluid=True, className="p-3", id="reports-layout-container") # Agregado id

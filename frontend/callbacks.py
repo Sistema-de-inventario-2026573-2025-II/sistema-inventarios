@@ -359,7 +359,7 @@ def register_simple_dispatch(n_clicks, lote_id, quantity):
     Output("dispatch-fefo-result-status", "children"),
     Output("dispatch-fefo-result-status", "color"),
     Input("dispatch-fefo-button", "n_clicks"),
-    State("dispatch-fefo-product-id", "value"),
+    State("dispatch-fefo-product-dropdown", "value"),
     State("dispatch-fefo-quantity", "value"),
     prevent_initial_call=True
 )

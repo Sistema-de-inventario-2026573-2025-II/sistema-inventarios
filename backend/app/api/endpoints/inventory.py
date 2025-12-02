@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 # Importamos los schemas de Lote de Modulo 1
-from app.schemas.lote import LoteCreate, Lote, LoteWithProduct 
+from app.schemas.lote import LoteCreate, Lote
 from app.schemas.inventory import InventoryExitRequest, SmartDispatchReq
 from app.schemas.movimiento import Movimiento
 from typing import List
