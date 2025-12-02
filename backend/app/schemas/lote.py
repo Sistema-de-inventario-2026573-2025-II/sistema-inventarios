@@ -17,7 +17,7 @@ class LoteCreate(LoteBase):
 class Lote(LoteBase):
     """Esquema para leer un lote (incluye campos de la BD)."""
     id: int
-    cantidad_actual: int = 0 # Default a 0 si viene null de la BD por error
+    cantidad_actual: int | None = 0 # Permite None y defaultea a 0
 
     model_config = ConfigDict(from_attributes=True)
 
