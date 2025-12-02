@@ -1,6 +1,6 @@
 # sistema-inventarios/backend/app/crud/crud_inventory.py
 import logging
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.models.producto import Producto
 from app.models.lote import Lote
 from app.models.movimiento import Movimiento
@@ -14,10 +14,10 @@ logger = logging.getLogger(__name__)
 
 def get_lotes(db: Session, skip: int = 0, limit: int = 100) -> List[Lote]:
     """
-    Obtiene una lista de lotes.
+    Obtiene una lista de lotes, eager-cargando la informacion del producto.
     """
     logger.debug(f"Obteniendo lotes: skip={skip}, limit={limit}")
-    return db.query(Lote).offset(skip).limit(limit).all()
+    return db.query(Lote).options(joinedload(Lote.producto)).offset(skip).limit(limit).all()
 
 def get_lote(db: Session, lote_id: int) -> Lote | None:
     """

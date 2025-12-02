@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 # Importamos los schemas de Lote de Modulo 1
-from app.schemas.lote import LoteCreate, Lote 
+from app.schemas.lote import LoteCreate, Lote, LoteWithProduct 
 from app.schemas.inventory import InventoryExitRequest, SmartDispatchReq
 from app.schemas.movimiento import Movimiento
 from typing import List
@@ -17,14 +17,14 @@ logger = logging.getLogger(__name__)
 
 @router.get(
     "/lotes",
-    response_model=List[Lote]
+    response_model=List[LoteWithProduct]
 )
 def read_lotes(
     *,
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 100
-    ) -> List[Lote]:
+    ) -> List[LoteWithProduct]:
     """
     Obtiene una lista de lotes.
     """

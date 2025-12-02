@@ -1,5 +1,5 @@
 # sistema-inventarios/backend/app/schemas/lote.py
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, computed_field
 from datetime import date
 from typing import Optional
 
@@ -20,3 +20,14 @@ class Lote(LoteBase):
     cantidad_actual: int
 
     model_config = ConfigDict(from_attributes=True)
+
+class LoteWithProduct(Lote):
+    """
+    Esquema extendido para respuestas que incluyen informacion del producto.
+    Util para tablas y reportes.
+    """
+    @computed_field
+    @property
+    def producto_sku(self) -> str | None:
+        # Accede al objeto ORM 'producto' cargado via joinedload
+        return self.producto.sku if getattr(self, 'producto', None) else None
