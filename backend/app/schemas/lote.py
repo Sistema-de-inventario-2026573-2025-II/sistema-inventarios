@@ -20,14 +20,3 @@ class Lote(LoteBase):
     cantidad_actual: int | None = 0 # Permite None y defaultea a 0
 
     model_config = ConfigDict(from_attributes=True)
-
-class LoteWithProduct(Lote):
-    """
-    Esquema extendido para respuestas que incluyen informacion del producto.
-    Util para tablas y reportes.
-    """
-    @computed_field
-    @property
-    def producto_sku(self) -> str | None:
-        # Accede al objeto ORM 'producto' cargado via joinedload
-        return self.producto.sku if getattr(self, 'producto', None) else None
