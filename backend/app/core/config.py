@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     POSTGRES_USER: str = "user"
     POSTGRES_PASSWORD: str = "password"
     POSTGRES_DB: str = "app"
+    POSTGRES_PORT: int = 5432
     
     # URL de base de datos (se construye dinamicamente)
     # Si no se proveen las variables de entorno de Postgres,
@@ -52,7 +53,7 @@ def get_settings() -> Settings:
         ]):
             settings.DATABASE_URL = (
                 f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@"
-                f"{settings.POSTGRES_SERVER}/{settings.POSTGRES_DB}"
+                f"{settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
             )
         # Si no, usar SQLite como fallback para desarrollo
         else:
