@@ -18,7 +18,10 @@ if settings.DATABASE_URL.startswith("sqlite"):
 engine = create_engine(
     settings.DATABASE_URL, 
     connect_args=connect_args,
-    pool_pre_ping=True # Verifica la conexion antes de usarla (vital para cloud/Supabase)
+    pool_pre_ping=True, # Verifica la conexion antes de usarla (vital para cloud/Supabase)
+    pool_size=5,        # Limite conservador para evitar saturar Supabase (Free Tier)
+    max_overflow=10,    # Permite picos temporales
+    pool_recycle=1800   # Reciclar conexiones cada 30 mins para evitar timeouts
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
